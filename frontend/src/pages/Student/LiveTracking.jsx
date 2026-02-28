@@ -49,7 +49,8 @@ const LiveTracking = () => {
 
     const fetchProjects = async () => {
       try {
-        const projectsData = await getProjectsByUserId(user._id);
+        const response = await getProjectsByUserId(user._id);
+        const projectsData = response?.projects || [];
 
         if (!Array.isArray(projectsData)) {
           setProjects([]);
@@ -196,7 +197,7 @@ const LiveTracking = () => {
             {Array.isArray(projects) &&
               projects.map((project) => (
                 <SelectItem key={project._id} value={project._id}>
-                  {project.name}
+                  {project.projectName}
                 </SelectItem>
               ))}
           </SelectContent>
@@ -206,7 +207,7 @@ const LiveTracking = () => {
       {selectedProject && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>{selectedProject.name}</CardTitle>
+            <CardTitle>{selectedProject.projectName}</CardTitle>
             <CardDescription>{selectedProject.description}</CardDescription>
           </CardHeader>
         </Card>

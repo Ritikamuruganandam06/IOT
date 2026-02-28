@@ -59,16 +59,30 @@ const Register = () => {
   const years = Array.from({ length: 4 }, (_, i) => currentYear + i);
 
   return (
-    <div className="flex justify-center -mt-16 pt-12 pb-12 items-center min-h-screen bg-gradient-to-tr from-custom-cornflowerBlue to-custom-deepBlue p-4">
-      <Card className="w-full max-w-md md:max-w-lg lg:max-w-xl bg-white shadow-md rounded-2xl">
+    <div className="flex justify-center -mt-16 pt-12 pb-12 items-center min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-800 via-blue-900 to-slate-900 p-4">
+      {/* Background decorations */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <svg className="absolute top-0 left-0 w-full h-full opacity-10" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
+              <path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(96, 165, 250, 0.3)" strokeWidth="0.5"/>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#grid)" />
+        </svg>
+        <div className="absolute top-20 right-20 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 left-20 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
+      </div>
+
+      <Card className="relative z-10 w-full max-w-md md:max-w-lg lg:max-w-xl bg-slate-900/60 border border-white/10 backdrop-blur-md shadow-2xl rounded-2xl">
         <CardHeader>
-          <CardTitle className="flex justify-center text-2xl md:text-3xl lg:text-3xl text-custom-deepBlue pt-3">Register to the Application</CardTitle>
-          <CardDescription className="text-custom-deepBlue text-lg md:text-xl lg:text-xl font-medium flex justify-center">Join the IOT world</CardDescription>
+          <CardTitle className="flex justify-center text-2xl md:text-3xl lg:text-3xl text-white pt-3">Register to the Application</CardTitle>
+          <CardDescription className="text-gray-300 text-lg md:text-xl lg:text-xl font-medium flex justify-center">Join the IoT world</CardDescription>
         </CardHeader>
         <CardContent>
-          <form id="registerForm" className="text-custom-deepBlue" onSubmit={handleSubmit(onSubmit)}>
+          <form id="registerForm" className="text-white" onSubmit={handleSubmit(onSubmit)}>
             <div className="grid w-full items-center gap-4">
-              <Label className="block font-bold text-base md:text-lg lg:text-xl px-2">First Name</Label>
+              <Label className="block font-bold text-base md:text-lg lg:text-xl px-2 text-white">First Name</Label>
               <Input
                 type="text"
                 {...register('firstName', { required: 'First Name is required' })}
@@ -76,7 +90,7 @@ const Register = () => {
               />
               {errors.firstName && <p className="flex justify-end pr-3 text-red-500 mt-0 text-sm md:text-base lg:text-lg">{errors.firstName.message}</p>}
 
-              <Label className="block font-bold text-base md:text-lg lg:text-xl px-2">Last Name</Label>
+              <Label className="block font-bold text-base md:text-lg lg:text-xl px-2 text-white">Last Name</Label>
               <Input
                 type="text"
                 {...register('lastName', { required: 'Last Name is required' })}
@@ -84,7 +98,7 @@ const Register = () => {
               />
               {errors.lastName && <p className="flex justify-end pr-3 text-red-500 mt-0 text-sm md:text-base lg:text-lg">{errors.lastName.message}</p>}
 
-              <Label className="block font-bold text-base md:text-lg lg:text-xl px-2">Register Number</Label>
+              <Label className="block font-bold text-base md:text-lg lg:text-xl px-2 text-white">Register Number</Label>
               <Input
                 type="text"
                 {...register('registerNumber', { required: 'Register Number is required' })}
@@ -92,7 +106,7 @@ const Register = () => {
               />
               {errors.registerNumber && <p className="flex justify-end pr-3 text-red-500 mt-0 text-sm md:text-base lg:text-lg">{errors.registerNumber.message}</p>}
 
-              <Label className="block font-bold text-base md:text-lg lg:text-xl px-2">Batch</Label>
+              <Label className="block font-bold text-base md:text-lg lg:text-xl px-2 text-white">Batch</Label>
               <Select onValueChange={(value) => setValue('batch', value)}>
                 <SelectTrigger className="w-full px-3 py-2 border rounded-md text-gray-500">
                   <SelectValue placeholder='Select Batch'>{watch('batch')? watch('batch') : ""}</SelectValue>
@@ -108,7 +122,7 @@ const Register = () => {
               </Select>
               {errors.batch && <p className="flex justify-end pr-3 text-red-500 mt-0 text-sm md:text-base lg:text-lg">{errors.batch.message}</p>}
 
-              <Label className="block font-bold text-base md:text-lg lg:text-xl px-2">Username</Label>
+              <Label className="block font-bold text-base md:text-lg lg:text-xl px-2 text-white">Username</Label>
               <Input
                 type="text"
                 {...register('username', { required: 'Username is required' })}
@@ -116,7 +130,7 @@ const Register = () => {
               />
               {errors.username && <p className="flex justify-end pr-3 text-red-500 mt-0 text-sm md:text-base lg:text-lg">{errors.username.message}</p>}
 
-              <Label className="block font-bold text-base md:text-lg lg:text-xl px-2">Email</Label>
+              <Label className="block font-bold text-base md:text-lg lg:text-xl px-2 text-white">Email</Label>
               <Input
                 type="email"
                 {...register('email', { required: 'Email is required' })}
@@ -124,7 +138,7 @@ const Register = () => {
               />
               {errors.email && <p className="flex justify-end pr-3 text-red-500 mt-0 text-sm md:text-base lg:text-lg">{errors.email.message}</p>}
 
-              <Label className="block font-bold text-base md:text-lg lg:text-xl px-2">Password</Label>
+              <Label className="block font-bold text-base md:text-lg lg:text-xl px-2 text-white">Password</Label>
               <div className="relative">
                 <Input
                   type={showPassword ? "text" : "password"}
@@ -141,7 +155,7 @@ const Register = () => {
               </div>
               {errors.password && <p className="flex justify-end pr-3 text-red-500 mt-0 text-sm md:text-base lg:text-lg">{errors.password.message}</p>}
 
-              <Label className="block font-bold text-base md:text-lg lg:text-xl px-2">Confirm Password</Label>
+              <Label className="block font-bold text-base md:text-lg lg:text-xl px-2 text-white">Confirm Password</Label>
               <div className="relative">
               <Input
                 type={showConfirmPassword ? "text" : "password"}
@@ -164,11 +178,11 @@ const Register = () => {
           </form>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4 mb-4">
-          <Button type="submit" form="registerForm" className="w-full md:w-72 lg:w-96 bg-custom-softBlue text-white hover:bg-custom-deepBlue md:text-lg flex justify-center items-center">
+          <Button type="submit" form="registerForm" className="w-full md:w-72 lg:w-96 bg-gradient-to-r from-blue-700 via-blue-800 to-blue-900 text-white border border-blue-600 hover:shadow-lg hover:shadow-blue-500/40 md:text-lg flex justify-center items-center">
             {loading ? <PulseLoader color="#FFFFFF" loading={loading} radius={2} margin={2} /> : 'Register'}
           </Button>
           <Button
-            className="w-full md:w-72 lg:w-96 bg-custom-softBlue text-white hover:bg-custom-deepBlue md:text-lg"
+            className="w-full md:w-72 lg:w-96 bg-transparent border border-white/30 text-white hover:bg-white/10 md:text-lg"
             onClick={() => navigate('/login')}
           >Login</Button>
         </CardFooter>

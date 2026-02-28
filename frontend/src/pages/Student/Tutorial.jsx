@@ -247,10 +247,6 @@ const Tutorial = () => {
             </Tabs>
           </section>
           
-          <section className="mb-8">
-          <h2 className="text-lg font-bold mb-2" > To Clarify the Doubts:  
-          <a href="https://github.com/KAVIRAJec/Iot-Application/tree/main/Microcontroller_Code" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">View On Github</a> </h2>
-         </section>
          
         </CardContent>
       </Card>

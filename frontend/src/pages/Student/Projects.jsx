@@ -31,9 +31,9 @@ const Projects = () => {
 
   const [formData, setFormData] = useState({
     id: "",
-    name: "",
+    projectName: "",
     description: "",
-    microcontroller: "",
+    MicroController: "",
   });
 
   // ✅ FETCH PROJECTS
@@ -69,7 +69,7 @@ const Projects = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.description || !formData.microcontroller) {
+    if (!formData.projectName || !formData.description || !formData.MicroController) {
       toast.error("Please fill all fields");
       return;
     }
@@ -77,9 +77,9 @@ const Projects = () => {
     try {
       if (isEditing) {
         const response = await updateProject(formData.id, {
-          name: formData.name,
+          projectName: formData.projectName,
           description: formData.description,
-          microcontroller: formData.microcontroller,
+          MicroController: formData.MicroController,
         });
 
         if (response.status === "success") {
@@ -89,21 +89,26 @@ const Projects = () => {
             ),
           );
           toast.success(response.message);
+        } else {
+          toast.error(response.message || "Update failed");
         }
       } else {
         const response = await createProjects({
-          name: formData.name,
+          projectName: formData.projectName,
           description: formData.description,
-          microcontroller: formData.microcontroller,
+          MicroController: formData.MicroController,
         });
 
         if (response.status === "success") {
           setProjects((prev) => [...prev, response.project]);
           toast.success(response.message);
+        } else {
+          toast.error(response.message || "Create failed");
+          return;
         }
       }
 
-      setFormData({ id: "", name: "", description: "", microcontroller: "" });
+      setFormData({ id: "", projectName: "", description: "", MicroController: "" });
       setIsEditing(false);
       setShowForm(false);
     } catch (err) {
@@ -127,9 +132,9 @@ const Projects = () => {
   const handleEdit = (project) => {
     setFormData({
       id: project._id,
-      name: project.name,
+      projectName: project.projectName,
       description: project.description,
-      microcontroller: project.microcontroller,
+      MicroController: project.MicroController,
     });
     setIsEditing(true);
     setShowForm(true);
@@ -143,7 +148,73 @@ const Projects = () => {
 
   return (
     <div className="p-5 w-full">
-      <h1 className="text-2xl font-bold mb-6">Manage & Explore Projects</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-white">Manage & Explore Projects</h1>
+        <Button
+          onClick={() => {
+            setFormData({ id: "", projectName: "", description: "", MicroController: "" });
+            setIsEditing(false);
+            setShowForm(true);
+          }}
+        >
+          Create New Project
+        </Button>
+      </div>
+
+      {/* Create / Edit Form */}
+      {showForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl p-6 w-full max-w-md">
+            <h2 className="text-xl font-semibold mb-4">
+              {isEditing ? "Edit Project" : "Create New Project"}
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="projectName">Project Name</Label>
+                <Input
+                  id="projectName"
+                  name="projectName"
+                  value={formData.projectName}
+                  onChange={handleInputChange}
+                  placeholder="Enter project name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Input
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  placeholder="Enter description"
+                />
+              </div>
+              <div>
+                <Label htmlFor="MicroController">Microcontroller</Label>
+                <Input
+                  id="MicroController"
+                  name="MicroController"
+                  value={formData.MicroController}
+                  onChange={handleInputChange}
+                  placeholder="e.g. ESP32"
+                />
+              </div>
+              <div className="flex gap-3 justify-end pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowForm(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  {isEditing ? "Update Project" : "Create Project"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-4">
         {projects.length === 0 ? (
@@ -152,13 +223,13 @@ const Projects = () => {
           projects.map((project) => (
             <Card key={project._id} className="w-72">
               <CardHeader>
-                <CardTitle>{project.name}</CardTitle>
+                <CardTitle>{project.projectName}</CardTitle>
                 <CardDescription>{project.description}</CardDescription>
               </CardHeader>
 
               <CardContent>
                 <p>
-                  <strong>Microcontroller:</strong> {project.microcontroller}
+                  <strong>Microcontroller:</strong> {project.MicroController}
                 </p>
 
                 <div className="flex justify-between mt-4">

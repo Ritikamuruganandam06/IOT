@@ -17,6 +17,7 @@ import Sidebar from "./components/sidebar";
 import Header from "./components/header";
 
 import Home from "./pages/Home";
+import Landing from "./pages/Landing";
 import Profile from "./pages/Profile";
 import Register from "./pages/Auth/Register";
 import Login from "./pages/Auth/Login";
@@ -44,6 +45,7 @@ const AppContent = () => {
   const { user, loading } = useAuth();
 
   const hideNavbarRoutes = ["/login", "/register"];
+  const isLandingPage = location.pathname === "/" && !user;
 
   if (loading) {
     return (
@@ -57,13 +59,14 @@ const AppContent = () => {
   }
 
   const isAuthRoute = hideNavbarRoutes.includes(location.pathname);
+  const hideChrome = isAuthRoute || isLandingPage;
 
   return (
     <div className="flex">
-      {!isAuthRoute && <Sidebar />}
+      {!hideChrome && <Sidebar />}
 
       <div
-        className={`w-full flex-1 overflow-y-auto ${isAuthRoute ? "h-full" : "h-screen"}`}
+        className={`w-full flex-1 overflow-y-auto ${hideChrome ? "h-full" : "h-screen"}`}
       >
         <Toaster />
         <SonnerToaster
@@ -74,15 +77,15 @@ const AppContent = () => {
         />
 
         <div
-          className={`flex flex-col ${isAuthRoute ? "h-full" : "h-screen"} mt-16`}
+          className={`flex flex-col ${hideChrome ? "h-full" : "h-screen"} ${hideChrome ? "" : "mt-16"}`}
         >
-          {!isAuthRoute && <Header />}
+          {!hideChrome && <Header />}
 
           {/* 🔥 IMPORTANT — Routes wrapper */}
           <Routes>
             <Route
               path="/"
-              element={user ? <Home /> : <Navigate to="/login" />}
+              element={user ? <Home /> : <Landing />}
             />
             <Route
               path="/login"
