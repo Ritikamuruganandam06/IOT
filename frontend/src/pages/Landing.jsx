@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import * as THREE from "three";
 import {
   Activity,
   Wifi,
@@ -12,13 +13,126 @@ import {
 
 const Landing = () => {
   const navigate = useNavigate();
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 80;
+
+    // Particles
+    const PARTICLE_COUNT = 120;
+    const positions = [];
+    const velocities = [];
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      positions.push(
+        (Math.random() - 0.5) * 200,
+        (Math.random() - 0.5) * 120,
+        (Math.random() - 0.5) * 60
+      );
+      velocities.push(
+        (Math.random() - 0.5) * 0.04,
+        (Math.random() - 0.5) * 0.04,
+        0
+      );
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    const posArray = new Float32Array(positions);
+    geometry.setAttribute("position", new THREE.BufferAttribute(posArray, 3));
+
+    const material = new THREE.PointsMaterial({
+      color: 0x60a5fa,
+      size: 0.8,
+      transparent: true,
+      opacity: 0.8,
+    });
+
+    const points = new THREE.Points(geometry, material);
+    scene.add(points);
+
+    // Lines between nearby particles
+    const lineGeometry = new THREE.BufferGeometry();
+    const linePositions = new Float32Array(PARTICLE_COUNT * PARTICLE_COUNT * 6);
+    const lineMaterial = new THREE.LineBasicMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.15 });
+    const lineSegments = new THREE.LineSegments(lineGeometry, lineMaterial);
+    scene.add(lineSegments);
+
+    let animId;
+    const MAX_DIST = 30;
+
+    const animate = () => {
+      animId = requestAnimationFrame(animate);
+
+      const pos = geometry.attributes.position.array;
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        pos[i * 3] += velocities[i * 3];
+        pos[i * 3 + 1] += velocities[i * 3 + 1];
+        // Wrap around
+        if (pos[i * 3] > 100) pos[i * 3] = -100;
+        if (pos[i * 3] < -100) pos[i * 3] = 100;
+        if (pos[i * 3 + 1] > 60) pos[i * 3 + 1] = -60;
+        if (pos[i * 3 + 1] < -60) pos[i * 3 + 1] = 60;
+      }
+      geometry.attributes.position.needsUpdate = true;
+
+      // Update connecting lines
+      let lIdx = 0;
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        for (let j = i + 1; j < PARTICLE_COUNT; j++) {
+          const dx = pos[i*3] - pos[j*3];
+          const dy = pos[i*3+1] - pos[j*3+1];
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist < MAX_DIST) {
+            linePositions[lIdx++] = pos[i*3];
+            linePositions[lIdx++] = pos[i*3+1];
+            linePositions[lIdx++] = pos[i*3+2];
+            linePositions[lIdx++] = pos[j*3];
+            linePositions[lIdx++] = pos[j*3+1];
+            linePositions[lIdx++] = pos[j*3+2];
+          }
+        }
+      }
+      lineGeometry.setAttribute("position", new THREE.BufferAttribute(linePositions.slice(0, lIdx), 3));
+      lineGeometry.setDrawRange(0, lIdx / 3);
+      lineGeometry.attributes.position.needsUpdate = true;
+
+      renderer.render(scene, camera);
+    };
+    animate();
+
+    const handleResize = () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    };
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener("resize", handleResize);
+      renderer.dispose();
+    };
+  }, []);
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-800 via-blue-900 to-slate-900">
+      {/* Three.js animated canvas */}
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full"
+        style={{ filter: "blur(2px)", opacity: 0.5, zIndex: 0 }}
+      />
       {/* Background overlay with pattern */}
       <div
         className="absolute inset-0 opacity-20"
         style={{
+          zIndex: 1,
           backgroundImage: `
             radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
             radial-gradient(circle at 80% 80%, rgba(96, 165, 250, 0.3) 0%, transparent 50%),
