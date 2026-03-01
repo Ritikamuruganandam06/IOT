@@ -20,7 +20,7 @@ const createSensor = async (req, res) => {
       otherwise: Joi.forbidden(),
     }),
   });
-
+console.log("Received create sensor request with body:", req.body, "and params:", req.params);
   const { error, value } = schema.validate(req.body);
 
   if (error) {

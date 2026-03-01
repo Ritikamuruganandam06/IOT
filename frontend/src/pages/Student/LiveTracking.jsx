@@ -17,6 +17,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from "@/components/ui/dialog1";
+
+import { Button } from "@/components/ui/button1";
+
 import {
   Card,
   CardHeader,
@@ -25,6 +37,7 @@ import {
 } from "@/components/ui/card1";
 
 import Loading from "@/components/loading";
+import ManageSensors from "@/components/manageSensors/ManageSensors";
 import GaugeCard from "@/components/gauge/gaugeCard";
 import { BarChartCard } from "@/components/chart/BarChartCard";
 import { LineChartCard } from "@/components/chart/LineChartCard";
@@ -40,6 +53,7 @@ const LiveTracking = () => {
   const [sensors, setSensors] = useState([]);
   const [sensorData, setSensorData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false); // ✅ ADDED
 
   // ==============================
   // 1️⃣ Fetch Projects
@@ -52,12 +66,6 @@ const LiveTracking = () => {
         const response = await getProjectsByUserId(user._id);
         const projectsData = response?.projects || [];
 
-        if (!Array.isArray(projectsData)) {
-          setProjects([]);
-          setLoading(false);
-          return;
-        }
-
         setProjects(projectsData);
 
         if (projectsData.length > 0) {
@@ -65,12 +73,10 @@ const LiveTracking = () => {
             projectsData.find((p) => p._id === projectId) || projectsData[0];
 
           setSelectedProject(found);
-        } else {
-          setLoading(false);
         }
       } catch (error) {
-        console.error(error);
         toast.error("Failed to fetch projects");
+      } finally {
         setLoading(false);
       }
     };
@@ -81,26 +87,29 @@ const LiveTracking = () => {
   // ==============================
   // 2️⃣ Fetch Sensors
   // ==============================
-  useEffect(() => {
-    if (!selectedProject?._id) return;
+ useEffect(() => {
+   if (!selectedProject?._id) return;
 
-    const fetchSensors = async () => {
-      try {
-        const response = await getSensorByProjectId(
-          selectedProject._id,
-          user._id,
-        );
+   const fetchSensors = async () => {
+     try {
+       const response = await getSensorByProjectId(
+         selectedProject._id,
+         user._id,
+       );
 
-        const sensorArray = response?.data || [];
-        setSensors(sensorArray);
-      } catch (error) {
-        console.error(error);
-        toast.error("Failed to fetch sensors");
-      }
-    };
+       const normalizedSensors = (response?.data || []).map((sensor) => ({
+         ...sensor,
+         id: sensor._id, // normalize MongoDB _id → id
+       }));
 
-    fetchSensors();
-  }, [selectedProject?._id]);
+       setSensors(normalizedSensors);
+     } catch (error) {
+       toast.error("Failed to fetch sensors");
+     }
+   };
+
+   fetchSensors();
+ }, [selectedProject?._id]);
 
   // ==============================
   // 3️⃣ Fetch Sensor Data
@@ -112,7 +121,6 @@ const LiveTracking = () => {
       try {
         if (!Array.isArray(sensors) || sensors.length === 0) {
           setSensorData([]);
-          setLoading(false);
           return;
         }
 
@@ -121,13 +129,9 @@ const LiveTracking = () => {
         );
 
         const responses = await Promise.all(promises);
-
         setSensorData(responses.map((res) => res?.data || []));
       } catch (error) {
-        console.error(error);
         toast.error("Failed to fetch sensor data");
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -168,9 +172,6 @@ const LiveTracking = () => {
     };
   }, [selectedProject?._id]);
 
-  // ==============================
-  // Loading
-  // ==============================
   if (loading) {
     return (
       <div className="h-screen flex justify-center items-center">
@@ -179,33 +180,57 @@ const LiveTracking = () => {
     );
   }
 
-  // ==============================
-  // UI
-  // ==============================
   return (
     <div className="p-6 w-full">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-xl font-bold">Track Individual Project</h1>
 
-        <Select
-          value={selectedProject?._id || ""}
-          onValueChange={(value) =>
-            setSelectedProject(projects.find((p) => p._id === value))
-          }
-        >
-          <SelectTrigger className="w-[200px] bg-white">
-            <SelectValue placeholder="Select Project" />
-          </SelectTrigger>
+        <div className="flex items-center gap-3">
+          <Select
+            value={selectedProject?._id || ""}
+            onValueChange={(value) =>
+              setSelectedProject(projects.find((p) => p._id === value))
+            }
+          >
+            <SelectTrigger className="w-[200px] bg-white">
+              <SelectValue placeholder="Select Project" />
+            </SelectTrigger>
 
-          <SelectContent>
-            {Array.isArray(projects) &&
-              projects.map((project) => (
+            <SelectContent>
+              {projects.map((project) => (
                 <SelectItem key={project._id} value={project._id}>
                   {project.projectName}
                 </SelectItem>
               ))}
-          </SelectContent>
-        </Select>
+            </SelectContent>
+          </Select>
+
+          {/* ✅ ADDED Manage Sensors Button */}
+          <Dialog open={showForm} onOpenChange={setShowForm}>
+            <DialogTrigger asChild>
+              <Button className="bg-foreground text-white">
+                Manage Sensors
+              </Button>
+            </DialogTrigger>
+
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Manage Sensors</DialogTitle>
+                <DialogDescription>
+                  Create, update or delete sensors.
+                </DialogDescription>
+              </DialogHeader>
+
+              <ManageSensors
+                projectId={selectedProject?._id}
+                userId={user?._id}
+                sensors={sensors}
+                changeSensors={setSensors}
+                handleOpen={() => setShowForm(false)}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {selectedProject && (

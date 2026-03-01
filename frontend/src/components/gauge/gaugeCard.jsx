@@ -19,6 +19,7 @@ const GaugeCard = ({ sensors, sensorData }) => {
             Sensor data which are sent from microController to server.
           </CardDescription>
         </CardHeader>
+
         <CardContent>
           {sensors?.length === 0 ? (
             <CardDescription className="text-lg text-center font-semibold">
@@ -27,55 +28,81 @@ const GaugeCard = ({ sensors, sensorData }) => {
           ) : (
             <div className="w-full flex flex-wrap justify-center gap-4 overflow-auto">
               {sensorData.map((data, index) => {
-                const latestData = data.length > 0 ? data[data.length - 1] : null;
+                const sensor = sensors[index];
+                const latestData =
+                  data?.length > 0 ? data[data.length - 1] : null;
+
+                // ✅ SAFE NUMERIC VALUES
+                const min = Number(sensor?.minThreshold ?? 0);
+                const max = Number(sensor?.maxThreshold ?? 100);
+
+                // Ensure valid gauge boundaries
+                const safeMin = Math.max(0, min - Math.abs(min * 0.5));
+                const safeMax = max + Math.abs(max * 0.5) + 10;
+
                 return (
-                  <Card key={index} className="bg-secondary rounded-xl shadow-xl w-80 sm:w-64 lg:w-72 max-w-full mb-6">
+                  <Card
+                    key={index}
+                    className="bg-secondary rounded-xl shadow-xl w-80 sm:w-64 lg:w-72 max-w-full mb-6"
+                  >
                     <CardHeader className="flex flex-col items-center justify-center h-16">
                       <CardTitle className="text-xl font-bold text-center">
-                        {sensors[index]?.name}
+                        {sensor?.name}
                       </CardTitle>
                       <CardDescription className="text-base font-medium text-center">
-                        {sensors[index]?.type}
+                        {sensor?.type}
                       </CardDescription>
                     </CardHeader>
+
                     <CardContent className="flex flex-col items-center">
                       <GaugeComponent
-                        value={latestData ? latestData.value : 0}
-                        minValue={Math.max(0, (sensors[index]?.minThreshold || 0) - (sensors[index]?.minThreshold * 0.5))}
-                        maxValue={(sensors[index]?.maxThreshold || 100) + (sensors[index]?.maxThreshold * 0.5)}
+                        value={latestData ? Number(latestData.value) : 0}
+                        minValue={safeMin}
+                        maxValue={safeMax}
                         arc={{
                           width: 0.3,
                           padding: 0.005,
                           cornerRadius: 1,
                           subArcs: [
                             {
-                              limit: sensors[index]?.minThreshold || 0, 
-                              color: "#F5CD19", 
-                              showTick: true, 
-                              tooltip: { text: `Too Low ${sensors[index]?.unit}!` },
+                              limit: min,
+                              color: "#F5CD19",
+                              showTick: true,
+                              tooltip: {
+                                text: `Too Low ${sensor?.unit}!`,
+                              },
                             },
                             {
-                              limit: sensors[index]?.maxThreshold || 100, 
-                              color: "#5BE12C", 
-                              showTick: true, 
-                              tooltip: { text: `${sensors[index]?.unit} in Limit!` },
+                              limit: max,
+                              color: "#5BE12C",
+                              showTick: true,
+                              tooltip: {
+                                text: `${sensor?.unit} in Limit!`,
+                              },
                             },
                             {
-                              limit: (sensors[index]?.maxThreshold || 100) + 10,
+                              limit: safeMax, // ✅ FIXED (was max + 10)
                               color: "#EA4228",
                               showTick: true,
-                              tooltip: { text: `Too High ${sensors[index]?.unit}!` },
+                              tooltip: {
+                                text: `Too High ${sensor?.unit}!`,
+                              },
                             },
                           ],
                         }}
                       />
+
                       <p className="text-center mt-2">
-                        {latestData ? latestData.value : 0} {" "} {sensors[index]?.unit}
+                        {latestData ? Number(latestData.value) : 0}{" "}
+                        {sensor?.unit}
                       </p>
+
                       <p className="text-gray-700 text-sm text-center font-medium mt-2">
                         Last modified:
                         <span className="font-bold ml-1">
-                          {latestData ? formatDate(latestData.timestamp) : "N/A"}
+                          {latestData
+                            ? formatDate(latestData.timestamp)
+                            : "N/A"}
                         </span>
                       </p>
                     </CardContent>
