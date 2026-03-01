@@ -1,72 +1,52 @@
 import api from "@/utils/api";
 
-// Send sensor data (For input switch)
+// Send sensor value
 export const sendSensorData = async (projectId, sensorId, data) => {
-    try {
-        const response = await api.post(`/api/projects/${projectId}/sensor/${sensorId}/sendData`, data);
-        return response.data;
-    } catch (error) {
-        const errorMessage = error.response.data.message;
-        console.error("Failed to send sensor data:", errorMessage);
-        const response = {
-            status: error.response.status,
-            message: errorMessage,
-            data: null,
-        };
-        return response;
-    }
-}
+  try {
+    const response = await api.post(
+      `/api/projects/${projectId}/sensor/${sensorId}/sendData`,
+      data,
+    );
 
-// Receive sensor data (For output)
-export const receiveSensorData = async (projectId, sensorId, userId) => {
-    try {
-        const response = await api.post(`/api/projects/${projectId}/sensor/${sensorId}/getData`, { id : userId });
-        return response.data;
-    } catch (error) {
-        const errorMessage = error.response.data.message;
-        console.error("Failed to receive sensor data:", errorMessage);
-        const response = {
-            status: error.response.status,
-            message: errorMessage,
-            data: null,
-        };
-        return response;
-    }
-}
+    return response.data;
+  } catch (error) {
+    console.error("Failed to send sensor data:", error);
+    return null;
+  }
+};
+
+// Receive sensor values
+export const receiveSensorData = async (projectId, sensorId) => {
+  try {
+    const response = await api.post(
+      `/api/projects/${projectId}/sensor/${sensorId}/getData`,
+    );
+
+    const formatted = response.data.data.map((item) => ({
+      id: item._id,
+      value: item.value,
+      sensorId: item.sensor,
+      projectId: projectId,
+      createdAt: item.createdAt,
+    }));
+
+    return { data: formatted };
+  } catch (error) {
+    console.error("Failed to receive sensor data:", error);
+    return { data: [] };
+  }
+};
 
 // Delete single sensor data
-export const deleteSensorData = async (projectId, sensorId, dataId, userId) => {
-    try {
-        const response = await api.delete(`/api/projects/${projectId}/sensor/${sensorId}/deleteData/${dataId}`, { data: {id: userId }});
-        return response.data;
-    } catch (error) {
-        const errorMessage = error.response.data.message;
-        console.error("Failed to delete sensor data:", errorMessage);
-        const response = {
-            status: error.response.status,
-            message: errorMessage,
-            data: null,
-        };
-        return response;
-    }
-}
+export const deleteSensorData = async (projectId, sensorId, dataId) => {
+  try {
+    const response = await api.delete(
+      `/api/projects/${projectId}/sensor/${sensorId}/deleteData/${dataId}`,
+    );
 
-// Delete multiple sensor data
-export const deleteMultipleSensorData = async (projectId, sensorId, userId, ids) => {
-    try {
-        const response = await api.delete(`/api/projects/${projectId}/sensor/${sensorId}/deleteData`, {
-            id: userId,
-            ids: ids,
-        });
-        return response.data;
-    } catch (error) {
-        const errorMessage = error.response.data.message;
-        console.error("Failed to delete sensor data:", errorMessage);
-        const response = {
-            status: error.response.status,
-            message: errorMessage,
-            data: null,
-        };
-        return response;
-    }
-}
+    return response.data;
+  } catch (error) {
+    console.error("Failed to delete sensor data:", error);
+    return null;
+  }
+};

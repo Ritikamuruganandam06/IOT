@@ -7,7 +7,7 @@ const getSensorByProjectId = async (req, res) => {
   try {
     // Check project exists & ownership
     const project = await ProjectModel.findProjectById(projectId);
-
+    console.log("Project found:", project);
     if (!project || project.owner.toString() !== req.user.id) {
       return res.status(404).json({
         status: "error",

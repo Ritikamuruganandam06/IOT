@@ -39,8 +39,20 @@ app.get("/", (req, res) => {
 });
 app.use("/api", userRoutes);
 app.use("/api", projectRoutes);
-app.use("/api", sensorRoutes);
+app.use("/api", sensorRoutes(io));
 // WebSocket
+io.on("connection", (socket) => {
+  console.log("Client connected:", socket.id);
+
+  socket.on("joinProject", (projectId) => {
+    console.log(`Socket ${socket.id} joined ${projectId}`);
+    socket.join(projectId);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Client disconnected:", socket.id);
+  });
+});
 
 
 const PORT = process.env.PORT || 3000;

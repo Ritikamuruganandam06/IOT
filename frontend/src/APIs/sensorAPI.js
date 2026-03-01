@@ -1,107 +1,118 @@
 import api from "@/utils/api";
 
-// create sensor
+// ==============================
+// Create Sensor
+// Backend: POST /projects/:projectId/sensors
+// ==============================
 export const createSensor = async (projectId, data) => {
   try {
-    const response = await api.post(`/api/projects/${projectId}/sensor/create`, data);
+    const response = await api.post(`/api/projects/${projectId}/sensors`, data);
     return response.data;
   } catch (error) {
-    const errorMessage = error.response.data.message;
-    console.error("Failed to create sensor:", errorMessage);
-    const response = {
-      status: error.response.status,
-      message: errorMessage,
-      data: error.response.data?.data,
+    console.error("Create sensor error:", error);
+    return {
+      status: error?.response?.status || 500,
+      message: error?.response?.data?.message || "Server Error",
+      data: null,
     };
-    return response;
   }
 };
 
-// get sensor by sensorId
-export const getSensorById = async (projectId, sensorId, userId) => {
-    try{
-        const response = await api.post(`/api/projects/${projectId}/sensor/get/${sensorId}`, { id: userId });
-        return response.data;
-    } catch (error) {
-        const errorMessage = error.response.data.message;
-        console.error("Failed to get sensor:", errorMessage);
-        const response = {
-            status: error.response.status,
-            message: errorMessage,
-            data: error.response.data?.data,
-        };
-        return response;
-    }
-}
+// ==============================
+// Get Sensor By ID
+// Backend: GET /projects/:projectId/sensor/get/:sensorId
+// ==============================
+export const getSensorById = async (projectId, sensorId) => {
+  try {
+    const response = await api.get(
+      `/api/projects/${projectId}/sensor/get/${sensorId}`,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Get sensor error:", error);
+    return {
+      status: error?.response?.status || 500,
+      message: error?.response?.data?.message || "Server Error",
+      data: null,
+    };
+  }
+};
 
-// get sensor by projectId
-export const getSensorByProjectId = async (projectId, userId) => {
-    try {
-        const response = await api.post(`/api/projects/${projectId}/sensor/getByProject`, { id: userId });
-        return response.data;
-    } catch (error) {
-        const errorMessage = error.response.data.message;
-        console.error("Failed to get sensor:", errorMessage);
-        const response = {
-            status: error.response.status,
-            message: errorMessage,
-            data: error.response.data?.data,
-        };
-        return response;
-    }
-}
+// ==============================
+// Get Sensors By Project
+// Backend: GET /projects/:projectId/sensors/getByProject
+// ==============================
+export const getSensorByProjectId = async (projectId) => {
+  try {
+    const response = await api.get(
+      `/api/projects/${projectId}/sensors/getByProject`,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Get sensors error:", error);
+    return {
+      status: error?.response?.status || 500,
+      message: error?.response?.data?.message || "Server Error",
+      data: [],
+    };
+  }
+};
 
-// get all sensors
-export const getAllSensors = async (projectId, userId) => {
-    try {
-        const response = await api.post(`/api/projects/${projectId}/sensor/getAll`, { id: userId });
-        return response.data;
-    } catch (error) {
-        const errorMessage = error.response.data.message;
-        console.error("Failed to get sensor:", errorMessage);
-        const response = {
-            status: error.response.status,
-            message: errorMessage,
-            data: error.response.data?.data,
-        };
-        return response;
-    }
-}
+// ==============================
+// Get All Sensors (Admin)
+// Backend: POST /projects/:projectId/sensor/getAll
+// ==============================
+export const getAllSensors = async (projectId) => {
+  try {
+    const response = await api.post(`/api/projects/${projectId}/sensor/getAll`);
+    return response.data;
+  } catch (error) {
+    console.error("Get all sensors error:", error);
+    return {
+      status: error?.response?.status || 500,
+      message: error?.response?.data?.message || "Server Error",
+      data: [],
+    };
+  }
+};
 
-// update sensor
+// ==============================
+// Update Sensor
+// Backend: PATCH /projects/:projectId/sensor/update/:sensorId
+// ==============================
 export const updateSensor = async (projectId, sensorId, data) => {
-    try {
-        const response = await api.patch(`/api/projects/${projectId}/sensor/update/${sensorId}`, data);
-        return response.data;
-    } catch (error) {
-        const errorMessage = error.response.data.message;
-        console.error("Failed to update sensor:", errorMessage);
-        const response = {
-            status: error.response.status,
-            message: errorMessage,
-            data: error.response.data?.data,
-        };
-        return response;
-    }
-}
+  try {
+    const response = await api.patch(
+      `/api/projects/${projectId}/sensor/update/${sensorId}`,
+      data,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Update sensor error:", error);
+    return {
+      status: error?.response?.status || 500,
+      message: error?.response?.data?.message || "Server Error",
+      data: null,
+    };
+  }
+};
 
-// delete sensor
-export const deleteSensor = async (projectId, sensorId, userId) => {
-    try {
-        const response = await api.delete(`/api/projects/${projectId}/sensor/delete/${sensorId}`, {
-            data: { id: userId }
-        });
-        return response.data;
-    } catch (error) {
-        const errorMessage = error.response.data.message;
-        console.error("Failed to delete sensor:", errorMessage);
-        const response = {
-            status: error.response.status,
-            message: errorMessage,
-            data: error.response.data?.data,
-        };
-        return response;
-    }
-}
-
-
+// ==============================
+// Delete Sensor
+// Backend: DELETE /projects/:projectId/sensor/delete/:sensorId
+// ==============================
+export const deleteSensor = async (projectId, sensorId) => {
+  try {
+    const response = await api.delete(
+      `/api/projects/${projectId}/sensor/delete/${sensorId}`,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Delete sensor error:", error);
+    return {
+      status: error?.response?.status || 500,
+      message: error?.response?.data?.message || "Server Error",
+      data: null,
+    };
+  }
+};

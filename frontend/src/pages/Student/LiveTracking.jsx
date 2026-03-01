@@ -138,31 +138,35 @@ const LiveTracking = () => {
   // Socket Updates
   // ==============================
   useEffect(() => {
-    socket.on("sensorData", (data) => {
+    if (!selectedProject?._id) return;
+
+    socket.emit("joinProject", selectedProject._id);
+
+    socket.on("sensorDataUpdate", (data) => {
       setSensorData((prev) =>
         prev.map((arr) =>
-          arr.length > 0 && arr[0].sensorId === data.sensorId
+          arr.length > 0 && arr[0].sensor === data.sensorId
             ? [...arr, data]
             : arr,
         ),
       );
     });
 
-    socket.on("deleteSensorData", (data) => {
+    socket.on("sensorDataDeleted", (data) => {
       setSensorData((prev) =>
         prev.map((arr) =>
-          arr.length > 0 && arr[0].sensorId === data.sensorId
-            ? arr.filter((item) => item._id !== data._id)
+          arr.length > 0 && arr[0].sensor === data.sensorId
+            ? arr.filter((item) => item._id !== data.dataId)
             : arr,
         ),
       );
     });
 
     return () => {
-      socket.off("sensorData");
-      socket.off("deleteSensorData");
+      socket.off("sensorDataUpdate");
+      socket.off("sensorDataDeleted");
     };
-  }, []);
+  }, [selectedProject?._id]);
 
   // ==============================
   // Loading

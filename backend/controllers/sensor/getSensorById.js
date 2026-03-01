@@ -6,7 +6,7 @@ console.log("Getting sensor with ID:", req.params.sensorId, "for project:", req.
 
   try {
     const sensor = await SensorModel.findSensorById(sensorId);
-
+    
     if (!sensor || sensor.project.toString() !== projectId) {
       return res.status(404).json({
         status: "error",
