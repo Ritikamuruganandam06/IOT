@@ -7,18 +7,19 @@ const updateSensor = require('../controllers/sensor/updateSensor');
 const deleteSensor = require('../controllers/sensor/deleteSensor');
 const getAllSensor = require('../controllers/sensor/getAllSensor');
 const authorizeAdmin = require('../middleware/authorizeAdmin');
-const sendSensorData = require('../controllers/sensor/sensorData/getSensorData');
+const sendSensorData = require('../controllers/sensor/sensorData/sendSensorData');
 const deleteSensorData = require('../controllers/sensor/sensorData/deleteSensorData');
 const getSensorData = require('../controllers/sensor/sensorData/getSensorData');
 const getSensorDataByName = require('../controllers/sensor/sensorData/getSensorDataByName');
 const sendSensorDataByName = require('../controllers/sensor/sensorData/sendSensorDataByName');
 const deleteMultipleSensorData = require('../controllers/sensor/sensorData/deleteMultipleSensorData');
+const verifyDevice = require('../middleware/verifyDevice');
 const router = (io) => {
   const router = express.Router();
 router.post('/projects/:projectId/sensors', authenticateToken, createSensor);
 router.get(
 "/projects/:projectId/sensor/get/:sensorId",
-  authenticateToken,
+    authenticateToken,
   getSensorById,
 );
 router.get(
@@ -47,10 +48,14 @@ router.post(
 );
 
     // Send sensor data (WebSocket enabled)
-    router.post('/projects/:projectId/sensor/:sensorId/sendData', authenticateToken, (req, res) => {
+    router.post(
+      "/projects/:projectId/sensor/:sensorId/sendData",
+      verifyDevice,
+      (req, res) => {
         req.io = io;
         sendSensorData(req, res);
-    });
+      },
+    );
     // Get sensor data (WebSocket enabled)
     router.post('/projects/:projectId/sensor/:sensorId/getData', authenticateToken, (req, res) => {
         req.io = io;
@@ -63,7 +68,14 @@ router.post(
     });
     // Delete multiple sensor data
     // router.delete('/projects/:projectId/sensor/:sensorId/deleteData', authenticateToken, deleteMultipleSensorData);
-
+    router.post(
+      "/projects/:projectId/sensor/:sensorId/sendDataFromWeb",
+      authenticateToken,
+      (req, res) => {
+        req.io = io;
+        sendSensorData(req, res);
+      },
+    );
     //get sensor data by sensor name & project Name (WebSocket enabled)
     router.post('/projects/:projectName/sensor/:sensorName/getValue', authenticateToken, (req, res) => {
         req.io = io;

@@ -72,6 +72,8 @@ const ManageSensors = ({ projectId, sensors, changeSensors, handleOpen }) => {
         const newSensor = {
           ...response.sensor,
           id: response.sensor._id,
+          name: response.sensor.sensorName,
+          type: response.sensor.sensorMode?.toUpperCase(),
         };
 
         changeSensors([...sensors, newSensor]);

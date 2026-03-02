@@ -1,5 +1,5 @@
 const Joi = require("joi");
-const SensorModel = require("../../../models/sensorModel");
+const SensorModel = require("../../../models/SensorModels");
 const ProjectModel = require("../../../models/projectModel");
 const UserModel = require("../../../models/userModel");
 const sendEmail = require("../../../utils/email");
@@ -56,7 +56,7 @@ const sendSensorData = async (req, res) => {
 
   try {
     // 1️⃣ Check project
-    const project = await ProjectModel.findById(pVal.projectId);
+    const project = await ProjectModel.findProjectById(pVal.projectId);
     if (!project) {
       return res.status(404).json({
         status: "error",
@@ -65,7 +65,7 @@ const sendSensorData = async (req, res) => {
     }
 
     // 2️⃣ Check sensor
-    const sensor = await SensorModel.findById(pVal.sensorId);
+    const sensor = await SensorModel.findSensorById(pVal.sensorId);
     if (!sensor) {
       return res.status(404).json({
         status: "error",

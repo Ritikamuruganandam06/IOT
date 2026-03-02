@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import SwitchCard from "@/components/switch/switchCard";
 import { getProjectsByUserId } from "@/APIs/projectAPI";
 import { getSensorByProjectId } from "@/APIs/sensorAPI";
 import {
@@ -87,29 +88,31 @@ const LiveTracking = () => {
   // ==============================
   // 2️⃣ Fetch Sensors
   // ==============================
- useEffect(() => {
-   if (!selectedProject?._id) return;
+  useEffect(() => {
+    if (!selectedProject?._id) return;
 
-   const fetchSensors = async () => {
-     try {
-       const response = await getSensorByProjectId(
-         selectedProject._id,
-         user._id,
-       );
+    const fetchSensors = async () => {
+      try {
+        const response = await getSensorByProjectId(selectedProject._id);
 
-       const normalizedSensors = (response?.data || []).map((sensor) => ({
-         ...sensor,
-         id: sensor._id, // normalize MongoDB _id → id
-       }));
+        const normalizedSensors = (
+          response?.sensors ||
+          response?.data ||
+          []
+        ).map((sensor) => ({
+          ...sensor,
+          id: sensor._id,
+          name: sensor.sensorName, // 🔥 FIX
+          type: sensor.sensorMode?.toUpperCase(), // 🔥 FIX
+        }));
+        setSensors(normalizedSensors);
+      } catch (error) {
+        toast.error("Failed to fetch sensors");
+      }
+    };
 
-       setSensors(normalizedSensors);
-     } catch (error) {
-       toast.error("Failed to fetch sensors");
-     }
-   };
-
-   fetchSensors();
- }, [selectedProject?._id]);
+    fetchSensors();
+  }, [selectedProject?._id]);
 
   // ==============================
   // 3️⃣ Fetch Sensor Data
@@ -148,21 +151,23 @@ const LiveTracking = () => {
 
     socket.on("sensorDataUpdate", (data) => {
       setSensorData((prev) =>
-        prev.map((arr) =>
-          arr.length > 0 && arr[0].sensor === data.sensorId
-            ? [...arr, data]
-            : arr,
-        ),
+        prev.map((arr) => {
+          if (arr.length > 0 && arr[0].sensorId === data.sensorId) {
+            return [...arr, data];
+          }
+          return arr;
+        }),
       );
     });
 
     socket.on("sensorDataDeleted", (data) => {
       setSensorData((prev) =>
-        prev.map((arr) =>
-          arr.length > 0 && arr[0].sensor === data.sensorId
-            ? arr.filter((item) => item._id !== data.dataId)
-            : arr,
-        ),
+        prev.map((arr) => {
+          if (arr.length > 0 && arr[0].sensorId === data.sensorId) {
+            return arr.filter((item) => item._id !== data.dataId);
+          }
+          return arr;
+        }),
       );
     });
 
@@ -171,7 +176,6 @@ const LiveTracking = () => {
       socket.off("sensorDataDeleted");
     };
   }, [selectedProject?._id]);
-
   if (loading) {
     return (
       <div className="h-screen flex justify-center items-center">
@@ -179,7 +183,23 @@ const LiveTracking = () => {
       </div>
     );
   }
+  // Separate sensors by type
+  const outputSensors = sensors.filter((sensor) => sensor.type === "OUTPUT");
 
+  const inputSensors = sensors.filter((sensor) => sensor.type === "INPUT");
+
+  // Match sensorData correctly by index
+  const outputSensorData = sensors
+    .map((sensor, index) =>
+      sensor.type === "OUTPUT" ? sensorData[index] : null,
+    )
+    .filter(Boolean);
+
+  const inputSensorData = sensors
+    .map((sensor, index) =>
+      sensor.type === "INPUT" ? sensorData[index] : null,
+    )
+    .filter(Boolean);
   return (
     <div className="p-6 w-full">
       <div className="flex justify-between items-center mb-6">
@@ -242,12 +262,42 @@ const LiveTracking = () => {
         </Card>
       )}
 
-      <GaugeCard sensors={sensors} sensorData={sensorData} />
+      <GaugeCard sensors={outputSensors} sensorData={outputSensorData} />
+      {/* INPUT SENSORS */}
+      {inputSensors.length > 0 && (
+        <div className="lg:px-16 mb-6">
+          <Card className="h-auto bg-quaternary rounded-xl shadow-xl">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl font-bold">
+                Input Sensors
+              </CardTitle>
+              <CardDescription>
+                You can control the input device here.
+              </CardDescription>
+            </CardHeader>
+
+            <div className="flex flex-wrap justify-center gap-4 p-6">
+              {inputSensors.map((sensor, index) => (
+                <SwitchCard
+                  key={sensor.id}
+                  sensor={sensor}
+                  sensorData={inputSensorData[index] || []}
+                  onSwitchChange={async (sensorId, value) => {
+                    await sendSensorData(selectedProject._id, sensorId, {
+                      value,
+                    });
+                  }}
+                />
+              ))}
+            </div>
+          </Card>
+        </div>
+      )}
       <BarChartCard sensors={sensors} sensorData={sensorData} />
       <LineChartCard sensors={sensors} sensorData={sensorData} />
       <TableCard sensors={sensors} sensorData={sensorData} />
     </div>
   );
-};
+};;
 
 export default LiveTracking;

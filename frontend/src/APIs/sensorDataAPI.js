@@ -1,25 +1,43 @@
-import api from "@/utils/api";
+import axios from "axios";
+import { getToken } from "@/utils/auth";
 
-// Send sensor value
+// Create axios instance
+const api = axios.create({
+  baseURL: "http://localhost:3000/api",
+});
+
+// ==============================
+// Send sensor value (Frontend)
+// ==============================
 export const sendSensorData = async (projectId, sensorId, data) => {
-  try {
-    const response = await api.post(
-      `/api/projects/${projectId}/sensor/${sensorId}/sendData`,
-      data,
-    );
+  const token = getToken();
 
-    return response.data;
-  } catch (error) {
-    console.error("Failed to send sensor data:", error);
-    return null;
-  }
+  return api.post(
+    `/projects/${projectId}/sensor/${sensorId}/sendDataFromWeb`,
+    data,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
 };
 
+// ==============================
 // Receive sensor values
+// ==============================
 export const receiveSensorData = async (projectId, sensorId) => {
   try {
+    const token = getToken();
+
     const response = await api.post(
-      `/api/projects/${projectId}/sensor/${sensorId}/getData`,
+      `/projects/${projectId}/sensor/${sensorId}/getData`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
     );
 
     const formatted = response.data.data.map((item) => ({
@@ -37,11 +55,20 @@ export const receiveSensorData = async (projectId, sensorId) => {
   }
 };
 
+// ==============================
 // Delete single sensor data
+// ==============================
 export const deleteSensorData = async (projectId, sensorId, dataId) => {
   try {
+    const token = getToken();
+
     const response = await api.delete(
-      `/api/projects/${projectId}/sensor/${sensorId}/deleteData/${dataId}`,
+      `/projects/${projectId}/sensor/${sensorId}/deleteData/${dataId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
     );
 
     return response.data;
