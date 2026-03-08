@@ -4,9 +4,9 @@ const joi = require('joi');
 
 const deleteSensorData = async (req, res) => {
   const paramsSchema = joi.object({
-    projectId: joi.string().required(),
-    sensorDataId: joi.string().required(),
-    dataId: joi.string().required(),
+    projectId: joi.string().length(24).hex().required(),
+    sensorId: joi.string().length(24).hex().required(),
+    dataId: joi.string().length(24).hex().required(),
   });
   console.log(req.params);
   const { error, value } = paramsSchema.validate(req.params);

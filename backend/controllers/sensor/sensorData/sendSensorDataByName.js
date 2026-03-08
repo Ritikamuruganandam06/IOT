@@ -4,7 +4,7 @@ const ProjectModel = require("../../../models/projectModel");
 const UserModel = require("../../../models/userModel");
 const sendEmail = require("../../../utils/email");
 
-const lastEmailSentTime = {}; // ⚠ resets if server restarts
+const lastEmailSentTime = {};
 
 const formatEmailContent = (
   username,
@@ -98,12 +98,13 @@ const sendSensorDataByName = async (req, res) => {
     // 5️⃣ Emit real-time update
     if (req.io) {
       req.io.to(project._id.toString()).emit("sensorDataUpdate", {
-        projectId: project._id,
-        sensorId: sensor._id,
-        sensorName: sensor.sensorName,
-        value: sensorData.value,
-        timestamp: sensorData.createdAt,
-      });
+  id: sensorData._id, 
+  projectId: pVal.projectId,
+  sensorId: sensor._id,
+  sensorName: sensor.sensorName,
+  value: sensorData.value,
+  timestamp: sensorData.createdAt,
+});
     }
 
     // 6️⃣ Threshold check (only for OUTPUT sensors)

@@ -84,7 +84,20 @@ const LiveTracking = () => {
 
     fetchProjects();
   }, [user?._id, projectId]);
+  const handleDelete = async (item) => {
+    try {
+      await deleteSensorData(selectedProject._id, item.sensorId, item.id);
 
+      toast.success("Deleted successfully");
+
+      // Optional: remove from UI immediately (optimistic update)
+      setSensorData((prev) =>
+        prev.map((arr) => arr.filter((data) => data.id !== item.id)),
+      );
+    } catch (error) {
+      toast.error("Failed to delete sensor data");
+    }
+  };
   // ==============================
   // 2️⃣ Fetch Sensors
   // ==============================
@@ -295,7 +308,11 @@ const LiveTracking = () => {
       )}
       <BarChartCard sensors={sensors} sensorData={sensorData} />
       <LineChartCard sensors={sensors} sensorData={sensorData} />
-      <TableCard sensors={sensors} sensorData={sensorData} />
+      <TableCard
+        sensors={sensors}
+        sensorData={sensorData}
+        handleDelete={handleDelete}
+      />
     </div>
   );
 };;

@@ -5,6 +5,7 @@ const updateProject = async (req, res) => {
   const schema = Joi.object({
     projectName: Joi.string().optional(),
     description: Joi.string().optional(),
+    MicroController: Joi.string().optional(),
   });
 
   const { error, value } = schema.validate(req.body);

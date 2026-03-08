@@ -45,7 +45,7 @@ export const receiveSensorData = async (projectId, sensorId) => {
       value: item.value,
       sensorId: item.sensor,
       projectId: projectId,
-      createdAt: item.createdAt,
+      timestamp: item.createdAt,
     }));
 
     return { data: formatted };

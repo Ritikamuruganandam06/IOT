@@ -4,7 +4,7 @@ const ProjectModel = require("../../../models/projectModel");
 const UserModel = require("../../../models/userModel");
 const sendEmail = require("../../../utils/email");
 
-const lastEmailSentTime = {}; // ⚠ resets if server restarts
+const lastEmailSentTime = {};
 
 const formatEmailContent = (
   username,
@@ -55,7 +55,7 @@ const sendSensorData = async (req, res) => {
   }
 
   try {
-    // 1️⃣ Check project
+    // Check project
     const project = await ProjectModel.findProjectById(pVal.projectId);
     if (!project) {
       return res.status(404).json({
@@ -64,7 +64,7 @@ const sendSensorData = async (req, res) => {
       });
     }
 
-    // 2️⃣ Check sensor
+    // Check sensor
     const sensor = await SensorModel.findSensorById(pVal.sensorId);
     if (!sensor) {
       return res.status(404).json({
@@ -73,7 +73,7 @@ const sendSensorData = async (req, res) => {
       });
     }
 
-    // 3️⃣ Ensure sensor belongs to project
+    // Ensure sensor belongs to project
     if (sensor.project.toString() !== pVal.projectId) {
       return res.status(400).json({
         status: "error",
@@ -81,7 +81,7 @@ const sendSensorData = async (req, res) => {
       });
     }
 
-    // 4️⃣ Validate INPUT sensor type
+    // Validate INPUT sensor type
     if (sensor.type === "INPUT" && ![0, 1].includes(bVal.value)) {
       return res.status(400).json({
         status: "error",
@@ -89,7 +89,7 @@ const sendSensorData = async (req, res) => {
       });
     }
 
-    // 5️⃣ Store sensor data
+    // Store sensor data
     const sensorData = await SensorModel.createSensorData({
       sensor: sensor._id,
       value: bVal.value,
@@ -97,20 +97,22 @@ const sendSensorData = async (req, res) => {
 
     console.log("📡 Sensor data stored:", sensorData.value);
 
-    // 6️⃣ Emit real-time update
+    // Emit real-time update
     if (req.io) {
-      req.io.to(pVal.projectId).emit("sensorDataUpdate", {
-        projectId: pVal.projectId,
-        sensorId: sensor._id,
-        sensorName: sensor.sensorName,
-        value: sensorData.value,
-        timestamp: sensorData.createdAt,
-      });
+    req.io.to(pVal.projectId).emit("sensorDataUpdate", {
+    id: sensorData._id, 
+    projectId: pVal.projectId,
+    sensorId: sensor._id,
+    sensorName: sensor.sensorName,
+    value: sensorData.value,
+    timestamp: sensorData.createdAt,
+      }
+    );
 
       console.log("🚀 WebSocket emitted to project:", pVal.projectId);
     }
 
-    // 7️⃣ Threshold check (only for OUTPUT sensors)
+    // Threshold check (only for OUTPUT sensors)
     if (
       sensor.type !== "INPUT" &&
       sensor.minThreshold !== undefined &&

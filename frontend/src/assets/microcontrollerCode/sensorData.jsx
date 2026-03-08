@@ -4,7 +4,7 @@ export const esp32_SensorData = `#ifndef SENSOR_DATA_H
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 
-const char* authToken = "Bearer YOUR_AUTH_TOKEN";
+const char* deviceKey = "YOUR_DEVICE_SECRET";
 
 /**
  * Fetches the latest sensor data from the API
@@ -25,7 +25,7 @@ int getLatestSensorData(String projectName, String sensorName, int userId) {
     HTTPClient http;
     http.begin(serverUrl);
     http.addHeader("Content-Type", "application/json");
-    http.addHeader("Authorization", authToken);
+    http.addHeader("x-device-key", deviceKey);
 
     StaticJsonDocument<200> requestBody;
     requestBody["id"] = userId;
@@ -76,9 +76,8 @@ void sendSensorData(String projectName, String sensorName, int userId, int value
         Serial.println("WiFi Disconnected! Cannot send data.");
         return;
     }
-
-    String serverUrl = "https://iot-application-backend.onrender.com/api/projects/" + 
-                        projectName + "/sensor/" + sensorName + "/sendValue";
+"https://iot-application-backend.onrender.com/api/projects/" + 
+                    projectId + "/sensor/" + sensorId + "/sendData";
 
     HTTPClient http;
     http.begin(serverUrl);
@@ -106,13 +105,13 @@ void sendSensorData(String projectName, String sensorName, int userId, int value
 }
 
 #endif
-`
+`;
 
-export const RaspberryPi_SensorData =  `import requests
+export const RaspberryPi_SensorData = `import requests
 import json
 
 # Authentication Token
-AUTH_TOKEN = "Bearer YOUR_AUTH_TOKEN"
+DEVICE_KEY = "YOUR_DEVICE_SECRET"
 
 # API Base URL
 BASE_URL = "https://iot-application-backend.onrender.com/api/projects"
@@ -128,9 +127,9 @@ def get_latest_sensor_data(project_name, sensor_name, user_id):
     """
     url = f"{BASE_URL}/{project_name}/sensor/{sensor_name}/getValue"
     headers = {
-        "Content-Type": "application/json",
-        "Authorization": AUTH_TOKEN
-    }
+    "Content-Type": "application/json",
+    "x-device-key": DEVICE_KEY
+}
     
     payload = {"id": user_id}
 
@@ -161,10 +160,9 @@ def send_sensor_data(project_name, sensor_name, user_id, value):
     """
     url = f"{BASE_URL}/{project_name}/sensor/{sensor_name}/sendValue"
     headers = {
-        "Content-Type": "application/json",
-        "Authorization": AUTH_TOKEN
+    "Content-Type": "application/json",
+    "x-device-key": DEVICE_KEY
     }
-    
     payload = {
         "id": user_id,
         "value": value
@@ -176,4 +174,4 @@ def send_sensor_data(project_name, sensor_name, user_id, value):
         print(f"Data Sent Successfully: {response.json()}")
     except requests.exceptions.RequestException as e:
         print(f"Error Sending Data: {e}")
-`
+`;

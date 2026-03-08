@@ -15,6 +15,6 @@ router.post("/users/login", loginUser);
 router.get("/users/profile", authenticateToken, getUser);
 router.patch("/users/profile", authenticateToken, updateUser);
 router.delete("/users/profile", authenticateToken, deleteUser);
-router.get("/users", authenticateToken, authorizeAdmin, getAllUsers);
+router.get("/users", authenticateToken, getAllUsers);
 
 module.exports = router;

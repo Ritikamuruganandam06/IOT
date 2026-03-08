@@ -11,7 +11,6 @@ const getProjectsByUserId = async (req, res) => {
   const { error } = schema.validate(req.params);
 
   if (error) {
-    console.log("❌ Validation Error:", error.details[0].message);
     return res.status(400).json({
       status: "error",
       message: error.details[0].message,
@@ -20,23 +19,16 @@ const getProjectsByUserId = async (req, res) => {
 
   try {
     const paramUserId = req.params.userId;
-    const tokenUserId = req.user?.id;
-
-    console.log("➡ Param userId:", paramUserId);
-    console.log("➡ Token userId:", tokenUserId);
+    const tokenUserId = req.user?.id || req.user?._id;
 
     if (paramUserId !== tokenUserId) {
-      console.log("🚨 Unauthorized access attempt");
       return res.status(403).json({
         status: "error",
         message: "Unauthorized access",
       });
     }
 
-    // ✅ Use your model method
     const projects = await ProjectModel.findByUserId(tokenUserId);
-
-    console.log("📦 Projects found:", projects.length);
 
     return res.status(200).json({
       status: "success",
@@ -44,7 +36,6 @@ const getProjectsByUserId = async (req, res) => {
       projects,
     });
   } catch (err) {
-    console.log("💥 Server Error:", err.message);
     return res.status(500).json({
       status: "error",
       message: err.message,

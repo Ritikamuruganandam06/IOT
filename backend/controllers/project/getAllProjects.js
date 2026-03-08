@@ -3,6 +3,7 @@ const ProjectModel = require("../../models/projectModel");
 const getAllProjects = async (req, res) => {
   try {
     const projects = await ProjectModel.getAllProjects();
+    console.log("projects →", projects);
 
     return res.status(200).json({
       status: "success",

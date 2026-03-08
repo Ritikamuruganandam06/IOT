@@ -1,4 +1,5 @@
 const Joi = require("joi");
+const crypto = require("crypto");
 const ProjectModel = require("../../models/projectModel");
 
 const createProject = async (req, res) => {
@@ -18,12 +19,16 @@ const createProject = async (req, res) => {
   }
 
   try {
-    console.log("req.user →", req.user); 
+    console.log("req.user →", req.user);
     console.log("req.body →", req.body);
 
-    const project = await await ProjectModel.createProject({
+    // ADDED DEVICE KEY GENERATION
+    const deviceKey = crypto.randomBytes(32).toString("hex");
+
+    const project = await ProjectModel.createProject({
       ...value,
       owner: req.user.id,
+      deviceKey,
     });
 
     return res.status(201).json({

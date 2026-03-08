@@ -8,15 +8,14 @@ import {
 } from "@/components/ui/card1";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
-import { getToken } from "@/utils/auth";
+
 import { esp_SampleCode, python_Samplecode } from "@/assets/microcontrollerCode/sampleCode";
 import { Esp32_ExampleCode, RaspBerryPi_ExampleCode } from "@/assets/microcontrollerCode/exampleCode";
 import { esp32_SensorData, RaspberryPi_SensorData } from "@/assets/microcontrollerCode/sensorData";
 import { Esp32_WifiSetUp_code, RaspBerryPi_WifiSetUp_code } from "@/assets/microcontrollerCode/WifiSetup";
 
 const Tutorial = () => {
-  const { user } = useAuth()
-  const token = getToken()
+  const { user } = useAuth();
 
   return (
     <motion.div
@@ -84,29 +83,40 @@ const Tutorial = () => {
               <li>
                 Get sensor data:
                 <pre className="bg-gray-100 p-4 rounded-lg overflow-auto">
-                <code>
-                  POST /api/projects/:projectName/sensor/:sensorName/getValue
-                </code>
+                  <code>
+                    POST /api/projects/:projectName/sensor/:sensorName/getValue
+                  </code>
                 </pre>
               </li>
+
               <li>
-                Send sensor data:{" "}
+                Send sensor data:
                 <pre className="bg-gray-100 p-4 rounded-lg overflow-auto">
-                <code>
-                  POST /api/projects/:projectName/sensor/:sensorName/sendValue
-                </code>
+                  <code>
+                    POST /api/projects/:projectName/sensor/:sensorName/sendValue
+                  </code>
                 </pre>
               </li>
+
               <li>
-                User data to pass in the request body:{" "}
+                Request body:
                 <pre className="bg-gray-100 p-4 rounded-lg overflow-auto">
-                <code>"id": {user.id}</code>
+                  <code>
+                    {`{
+  "id": USER_ID,
+  "value": SENSOR_VALUE
+}`}
+                  </code>
                 </pre>
               </li>
+
               <li>
-                User Token for header(Format: "Authorization": "Bearer YOUR_TOKEN"):{" "}
+                Required headers:
                 <pre className="bg-gray-100 p-4 rounded-lg overflow-auto">
-                <code>{token}</code>
+                  <code>
+                    Content-Type: application/json x-device-key:
+                    YOUR_DEVICE_SECRET
+                  </code>
                 </pre>
               </li>
             </ul>
@@ -114,7 +124,7 @@ const Tutorial = () => {
 
           <section className="mb-8">
             <h2 className="text-lg tex font-bold mb-2">
-            Sample Code for Initial Setup
+              Sample Code for Initial Setup
             </h2>
             <Tabs defaultValue="esp32" className="flex flex-col items-center">
               <TabsList className="mb-4 flex justify-center w-[240px]">
@@ -128,7 +138,7 @@ const Tutorial = () => {
                 </h2>
                 <pre className="bg-gray-100 p-4 rounded-lg overflow-auto">
                   <code className="whitespace-pre-wrap break-all">
-                  {esp_SampleCode}
+                    {esp_SampleCode}
                   </code>
                 </pre>
               </TabsContent>
@@ -139,7 +149,7 @@ const Tutorial = () => {
                 </h2>
                 <pre className="bg-gray-100 p-4 rounded-lg overflow-auto">
                   <code className="whitespace-pre-wrap break-all">
-                  {python_Samplecode}
+                    {python_Samplecode}
                   </code>
                 </pre>
               </TabsContent>
@@ -160,7 +170,7 @@ const Tutorial = () => {
                 </h2>
                 <pre className="bg-gray-100 p-4 rounded-lg overflow-auto">
                   <code className="whitespace-pre-wrap break-all">
-                  {Esp32_WifiSetUp_code}
+                    {Esp32_WifiSetUp_code}
                   </code>
                 </pre>
               </TabsContent>
@@ -171,7 +181,7 @@ const Tutorial = () => {
                 </h2>
                 <pre className="bg-gray-100 p-4 rounded-lg overflow-auto">
                   <code className="whitespace-pre-wrap break-all">
-                  {RaspBerryPi_WifiSetUp_code}
+                    {RaspBerryPi_WifiSetUp_code}
                   </code>
                 </pre>
               </TabsContent>
@@ -180,7 +190,8 @@ const Tutorial = () => {
 
           <section className="mb-8">
             <h2 className="text-lg tex font-bold mb-2">
-             SensorData Communication between  a Microcontroller and a Cloud-based API.
+              SensorData Communication between a Microcontroller and a
+              Cloud-based API.
             </h2>
             <Tabs defaultValue="esp32" className="flex flex-col items-center">
               <TabsList className="mb-4 flex justify-center w-[240px]">
@@ -194,7 +205,7 @@ const Tutorial = () => {
                 </h2>
                 <pre className="bg-gray-100 p-4 rounded-lg overflow-auto">
                   <code className="whitespace-pre-wrap break-all">
-                  {esp32_SensorData}
+                    {esp32_SensorData}
                   </code>
                 </pre>
               </TabsContent>
@@ -205,7 +216,7 @@ const Tutorial = () => {
                 </h2>
                 <pre className="bg-gray-100 p-4 rounded-lg overflow-auto">
                   <code className="whitespace-pre-wrap break-all">
-                  {RaspberryPi_SensorData}
+                    {RaspberryPi_SensorData}
                   </code>
                 </pre>
               </TabsContent>
@@ -229,7 +240,7 @@ const Tutorial = () => {
                 </h2>
                 <pre className="bg-gray-100 p-4 rounded-lg overflow-auto">
                   <code className="whitespace-pre-wrap break-all">
-                  {Esp32_ExampleCode}
+                    {Esp32_ExampleCode}
                   </code>
                 </pre>
               </TabsContent>
@@ -240,14 +251,12 @@ const Tutorial = () => {
                 </h2>
                 <pre className="bg-gray-100 p-4 rounded-lg overflow-auto">
                   <code className="whitespace-pre-wrap break-all">
-                  {RaspBerryPi_ExampleCode}
+                    {RaspBerryPi_ExampleCode}
                   </code>
                 </pre>
               </TabsContent>
             </Tabs>
           </section>
-          
-         
         </CardContent>
       </Card>
     </motion.div>

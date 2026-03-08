@@ -186,7 +186,6 @@ const ManageSensors = ({ projectId, sensors, changeSensors, handleOpen }) => {
         <TabsTrigger value="update">Update</TabsTrigger>
         <TabsTrigger value="delete">Delete</TabsTrigger>
       </TabsList>
-
       {/* CREATE */}
       <TabsContent value="create">
         <Card>
@@ -249,6 +248,98 @@ const ManageSensors = ({ projectId, sensors, changeSensors, handleOpen }) => {
             <Button onClick={handleOpen}>Cancel</Button>
             <Button onClick={handleCreateSensor} disabled={loading}>
               {loading ? "Creating..." : "Create"}
+            </Button>
+          </CardFooter>
+        </Card>
+      </TabsContent>
+      // ADD THIS BELOW CREATE TabsContent
+      {/* UPDATE */}
+      <TabsContent value="update">
+        <Card>
+          <CardHeader>
+            <CardTitle>Update Sensor</CardTitle>
+            <CardDescription>Select a sensor to update</CardDescription>
+          </CardHeader>
+
+          <CardContent className="space-y-3">
+            <Label>Select Sensor</Label>
+            <Select
+              onValueChange={(value) => {
+                setSensorId(value);
+                const selected = sensors.find((s) => s.id === value);
+                if (selected) {
+                  setSensorName(selected.sensorName);
+                  setSensorType(selected.sensorMode?.toUpperCase());
+                  setSensorUnit(selected.unit);
+                  setSensorMinThreshold(selected.minThreshold || "");
+                  setSensorMaxThreshold(selected.maxThreshold || "");
+                }
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Choose sensor" />
+              </SelectTrigger>
+              <SelectContent>
+                {sensors.map((sensor) => (
+                  <SelectItem key={sensor.id} value={sensor.id}>
+                    {sensor.sensorName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Label>Sensor Name</Label>
+            <Input
+              value={sensorName}
+              onChange={(e) => setSensorName(e.target.value)}
+            />
+
+            <Label>Unit</Label>
+            <Input
+              value={sensorUnit}
+              onChange={(e) => setSensorUnit(e.target.value)}
+            />
+          </CardContent>
+
+          <CardFooter className="flex justify-between">
+            <Button onClick={handleOpen}>Cancel</Button>
+            <Button onClick={handleUpdateSensor} disabled={loading}>
+              {loading ? "Updating..." : "Update"}
+            </Button>
+          </CardFooter>
+        </Card>
+      </TabsContent>
+      {/* DELETE */}
+      <TabsContent value="delete">
+        <Card>
+          <CardHeader>
+            <CardTitle>Delete Sensor</CardTitle>
+            <CardDescription>Select a sensor to delete</CardDescription>
+          </CardHeader>
+
+          <CardContent>
+            <Select onValueChange={(value) => setSensorId(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Choose sensor" />
+              </SelectTrigger>
+              <SelectContent>
+                {sensors.map((sensor) => (
+                  <SelectItem key={sensor.id} value={sensor.id}>
+                    {sensor.sensorName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardContent>
+
+          <CardFooter className="flex justify-between">
+            <Button onClick={handleOpen}>Cancel</Button>
+            <Button
+              onClick={handleDelete}
+              disabled={loading}
+              className="bg-red-600 text-white"
+            >
+              {loading ? "Deleting..." : "Delete"}
             </Button>
           </CardFooter>
         </Card>

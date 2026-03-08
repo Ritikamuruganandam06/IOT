@@ -21,10 +21,12 @@ const SwitchCard = ({ sensor, sensorData, onSwitchChange }) => {
     setIsChecked((lastData?.value === 1)? true : false);
   }, [lastData]);
 
-  const handleSwitchChange = () => {
+  const handleSwitchChange = async () => {
     const newValue = isChecked ? 0 : 1;
+
+    await onSwitchChange(sensor.id, newValue);
+
     setIsChecked(!isChecked);
-    onSwitchChange(sensor.id, newValue);
   };
 
   return (

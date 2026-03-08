@@ -2,16 +2,39 @@ const mongoose = require("mongoose");
 
 const projectSchema = new mongoose.Schema(
   {
-    projectName: { type: String, required: true },
-    description: { type: String },
-    MicroController: { type: String, required: true },
+    projectName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    description: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    MicroController: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
+
+    deviceKey: {
+      type: String,
+      required: true,
+      unique: true,
+    },
   },
-  { timestamps: true },
+  {
+    timestamps: true,
+  },
 );
 
 const Project = mongoose.model("Project", projectSchema);
@@ -51,7 +74,10 @@ class ProjectModel {
   }
 
   static async getAllProjects() {
-    return await Project.find();
+  return await Project.find().populate(
+    "owner",
+    "firstName lastName registerNumber batch",
+  );
   }
 
   static async updateProject(id, projectData) {

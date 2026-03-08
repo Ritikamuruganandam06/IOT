@@ -35,7 +35,6 @@ const loginUser = async (req, res) => {
         message: "Invalid password",
       });
     }
-
     // Generate JWT
     const token = generateToken({ id: user._id });
     console.log("Generated Token:", token);

@@ -15,7 +15,9 @@ const ManageUser = () => {
     const fetchUsers = async () => {
       try {
         const response = await getAllUser(user?.id);
-        setUsers(response.data);
+        console.log("API Response:", response);
+        setUsers(response.users);
+      
         setChange(false);
       } catch (error) {
         console.error('Failed to fetch users:', error);
@@ -73,8 +75,8 @@ const ManageUser = () => {
             </Table.Header>
             <Table.Body items={users} className="divide-y divide-gray-200">
               {(user) => (
-                <Table.Row key={user?.id} id={user?.id} className="hover:bg-gray-50 transition-all">
-                  <Table.Cell className="py-3 px-4 sm:text-lg">{user?.id}</Table.Cell>
+                <Table.Row key={user?._id} id={user?._id} className="hover:bg-gray-50 transition-all">
+                  <Table.Cell className="py-3 px-4 sm:text-lg">{user?._id}</Table.Cell>
                   <Table.Cell className="py-3 px-4 sm:text-lg">{`${user?.firstName} ${user?.lastName}`}</Table.Cell>
                   <Table.Cell className="py-3 px-4 sm:text-lg">{user?.email}</Table.Cell>
                   <Table.Cell className="py-3 px-4 sm:text-lg">{user?.batch}</Table.Cell>

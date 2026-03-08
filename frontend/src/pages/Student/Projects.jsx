@@ -149,10 +149,17 @@ const Projects = () => {
   return (
     <div className="p-5 w-full">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-white">Manage & Explore Projects</h1>
+        <h1 className="text-2xl font-bold text-white">
+          Manage & Explore Projects
+        </h1>
         <Button
           onClick={() => {
-            setFormData({ id: "", projectName: "", description: "", MicroController: "" });
+            setFormData({
+              id: "",
+              projectName: "",
+              description: "",
+              MicroController: "",
+            });
             setIsEditing(false);
             setShowForm(true);
           }}
@@ -231,7 +238,26 @@ const Projects = () => {
                 <p>
                   <strong>Microcontroller:</strong> {project.MicroController}
                 </p>
+                {/* Device Key */}
+                <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded mt-3">
+                  <p className="text-sm font-semibold">Device Key</p>
 
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono text-xs break-all">
+                      {project.deviceKey?.slice(0, 12)}...
+                    </span>
+
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(project.deviceKey);
+                        toast.success("Device key copied");
+                      }}
+                      className="text-xs bg-black text-white px-2 py-1 rounded"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                </div>
                 <div className="flex justify-between mt-4">
                   <Pencil
                     className="cursor-pointer"

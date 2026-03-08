@@ -28,11 +28,14 @@ const io = new Server(server, {
   transports: ["websocket", "polling"],
 });
 // Middleware
-app.use(cors({
-  origin: '*', // Allow all origins (for now)
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 app.use(express.json());
 app.get("/", (req, res) => {
     res.send("IoT Backend Running (CommonJS)");

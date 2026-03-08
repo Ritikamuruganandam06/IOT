@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
-
+import { deleteUser } from "@/APIs/UserAPI";
+import { useNavigate } from "react-router-dom";
 import { getProjectsByUserId } from "@/APIs/profileApi";
 import { updateUser } from "@/APIs/UserAPI";
 
@@ -39,8 +40,10 @@ const itemVariants = {
 };
 
 const Profile = () => {
-  const { user, fetchUserData } = useAuth();
+  const { user, fetchUserData, logout } = useAuth(); // ✅ merged logout here
+  const navigate = useNavigate(); // ✅ moved here
   const { toast } = useToast();
+
   const [profileImageUrl, setProfileImageUrl] = useState("");
   const [projects, setProjects] = useState([]);
   const [editUser, setEditUser] = useState({});
@@ -49,7 +52,7 @@ const Profile = () => {
   useEffect(() => {
     if (user && user.email) {
       const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-        user.email
+        user.email,
       )}&background=random&color=ffffff&bold=true`;
       setProfileImageUrl(avatarUrl);
       setEditUser(user);
@@ -57,10 +60,9 @@ const Profile = () => {
 
     const fetchProject = async () => {
       try {
-        if (user && user.id) {
+        if (user && user._id) {
           const projectsData = await getProjectsByUserId(user.id);
           setProjects(projectsData);
-
         }
       } catch (error) {
         console.error("Failed to fetch projects and sensors:", error);
@@ -74,16 +76,17 @@ const Profile = () => {
     setEditUser({ ...editUser, [name]: value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async () => {
     try {
       const updatedUser = await updateUser(editUser);
       setEditUser(updatedUser.data);
-      // setError(updatedUser.message);
+
       toast({
         variant: "success",
         title: updatedUser?.status,
         description: updatedUser?.message,
       });
+
       fetchUserData(getToken(), updatedUser.data.id);
     } catch (error) {
       console.error("Failed to update user:", error);
@@ -91,6 +94,28 @@ const Profile = () => {
         variant: "destructive",
         title: "Failed to update user",
         description: "Please try again later",
+      });
+    }
+  };
+
+  // ✅ DELETE ACCOUNT HANDLER
+  const handleDeleteAccount = async () => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete your account? This cannot be undone.",
+    );
+
+    if (!confirmDelete) return;
+
+    const response = await deleteUser();
+
+    if (response.status === "success") {
+      logout(); // 🔥 clear token + user
+      navigate("/login"); // 🔥 redirect to login
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: response.message,
       });
     }
   };
@@ -125,38 +150,34 @@ const Profile = () => {
                         Update your profile details below.
                       </DialogDescription>
                     </DialogHeader>
+
                     <div className="space-y-4 text-accent-foreground">
                       <Input
                         className="bg-gray-100"
-                        label="Username"
                         name="username"
                         value={editUser.username}
                         onChange={handleInputChange}
                       />
                       <Input
                         className="bg-gray-100"
-                        label="First Name"
                         name="firstName"
                         value={editUser.firstName}
                         onChange={handleInputChange}
                       />
                       <Input
                         className="bg-gray-100"
-                        label="Last Name"
                         name="lastName"
                         value={editUser.lastName}
                         onChange={handleInputChange}
                       />
                       <Input
                         className="bg-gray-100"
-                        label="Register Number"
                         name="registerNumber"
                         value={editUser.registerNumber}
                         onChange={handleInputChange}
                       />
                       <Input
                         className="bg-gray-100"
-                        label="Batch"
                         name="batch"
                         value={editUser.batch}
                         onChange={handleInputChange}
@@ -176,16 +197,18 @@ const Profile = () => {
                   </DialogContent>
                 </Dialog>
               </div>
+
               <div className="flex flex-col items-center">
                 {profileImageUrl ? (
                   <img
                     src={profileImageUrl}
                     alt="Profile"
-                    className="rounded-full h-48 w-48 mb-4 border-4 border-white shadow-md bg"
+                    className="rounded-full h-48 w-48 mb-4 border-4 border-white shadow-md"
                   />
                 ) : (
                   <div className="rounded-full h-48 w-48 mb-4 bg-gray-500"></div>
                 )}
+
                 <CardTitle className="text-xl font-bold mb-0 text-secondary">
                   My Profile
                 </CardTitle>
@@ -198,34 +221,48 @@ const Profile = () => {
             <CardContent className="py-6 px-2 sm:px-4 md:px-8 bg-secondary rounded-b-lg">
               <div className="grid grid-cols-2 gap-y-4 ">
                 <div className="font-semibold text-primary">Email:</div>
-                <div className="text-primary font-medium break-words">
-                  {user.email}
-                </div>
+                <div className="text-primary font-medium">{user.email}</div>
+
                 <div className="font-semibold text-primary">Username:</div>
                 <div className="text-primary font-medium">{user.username}</div>
+
                 <div className="font-semibold text-primary">First Name:</div>
                 <div className="text-primary font-medium">{user.firstName}</div>
+
                 <div className="font-semibold text-primary">Last Name:</div>
                 <div className="text-primary font-medium">{user.lastName}</div>
+
                 <div className="font-semibold text-primary">
                   Register Number:
                 </div>
                 <div className="text-primary font-medium">
                   {user.registerNumber}
                 </div>
+
                 <div className="font-semibold text-primary">Batch:</div>
                 <div className="text-primary font-medium">{user.batch}</div>
+
                 <div className="font-semibold text-primary">Role:</div>
                 <div className="text-primary font-medium">
                   {user.role === "user" ? "user" : "admin"}
                 </div>
+              </div>
+
+              {/* ✅ DELETE ACCOUNT BUTTON ADDED HERE */}
+              <div className="mt-6">
+                <Button
+                  onClick={handleDeleteAccount}
+                  className="bg-red-600 hover:bg-red-700 text-white w-full"
+                >
+                  Delete Account
+                </Button>
               </div>
             </CardContent>
           </motion.div>
         </Card>
       </motion.div>
 
-      {/* Project List */}
+      {/* Projects Section (unchanged) */}
       <motion.div
         variants={containerVariants}
         initial="hidden"
@@ -252,20 +289,22 @@ const Profile = () => {
                 className="mb-4 bg-secondary p-4 shadow-md"
               >
                 <div className="mb-2 grid grid-cols-2 ">
-                  <div className="text-lg font-bold mb-1 text-primary">
+                  <div className="text-lg font-bold text-primary">
                     Project Name:
                   </div>
-                  <div className="text-lg font-bold mb-1 text-primary">
+                  <div className="text-lg font-bold text-primary">
                     {project.name}
                   </div>
+
                   <div className="text-primary font-medium">Description:</div>
-                  <div className="text-primary font-medium mb-2">
+                  <div className="text-primary font-medium">
                     {project.description}
                   </div>
+
                   <div className="text-primary font-medium">
                     MicroController:
                   </div>
-                  <div className="text-primary font-medium mb-2">
+                  <div className="text-primary font-medium">
                     {project.microController}
                   </div>
                 </div>

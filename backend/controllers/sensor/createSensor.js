@@ -5,17 +5,19 @@ const ProjectModel = require("../../models/projectModel");
 const createSensor = async (req, res) => {
   const schema = Joi.object({
     sensorName: Joi.string().required(),
+
     unit: Joi.string().required(),
+
     sensorMode: Joi.string().valid("input", "output").required(),
 
     minThreshold: Joi.when("sensorMode", {
-      is: "OUTPUT",
+      is: "output",
       then: Joi.number().required(),
       otherwise: Joi.forbidden(),
     }),
 
     maxThreshold: Joi.when("sensorMode", {
-      is: "OUTPUT",
+      is: "output",
       then: Joi.number().required(),
       otherwise: Joi.forbidden(),
     }),

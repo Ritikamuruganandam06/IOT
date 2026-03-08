@@ -31,20 +31,27 @@ const TableCard = ({ sensorData, sensors, handleDelete }) => {
 
   useEffect(() => {
     const formattedData = sensorData.flat().map((dataPoint) => {
-      const sensor = sensors.find((sensor) => sensor.id === dataPoint.sensorId);
-      const formattedTimestamp = formatDate(dataPoint.timestamp);
-      const isOnline = formattedTimestamp.includes("minute") || formattedTimestamp.includes("Just now");
+  const sensor = sensors.find(
+    (sensor) => sensor.id === dataPoint.sensorId
+  );
 
-      return {
-        id: dataPoint.id,
-        sensorName: sensor ? sensor.name : "Unknown",
-        sensorType: sensor ? sensor.type.toLowerCase() : "Unknown",
-        value: dataPoint.value,
-        timestamp: formattedTimestamp,
-        status: isOnline ? "Online" : "Offline",
-        sensorId: sensor?.id,
-        projectId: sensor?.projectId
-      };
+  const formattedTimestamp = formatDate(dataPoint.timestamp);
+  const isOnline =
+    formattedTimestamp.includes("minute") ||
+    formattedTimestamp.includes("Just now");
+
+  return {
+    id:
+      dataPoint.id ||
+      `${dataPoint.sensorId}-${dataPoint.timestamp}`,
+    sensorName: sensor ? sensor.name : "Unknown",
+    sensorType: sensor ? sensor.type.toLowerCase() : "Unknown",
+    value: dataPoint.value,
+    timestamp: formattedTimestamp,
+    status: isOnline ? "Online" : "Offline",
+    sensorId: sensor?.id,
+    projectId: sensor?.projectId,
+  };
     });
     setData(formattedData);
     handleSort("timestamp");
