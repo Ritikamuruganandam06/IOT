@@ -19,14 +19,14 @@ const Header = () => {
 
   useEffect(() => {
     const fetchStatus = async () => {
-        if (user && user.id) {
-            const currentStatus = await getStatus(user.id);
-            setStatus(currentStatus);
-        }
+      if (user) {
+        const currentStatus = await getStatus();
+        setStatus(currentStatus);
+      }
     };
 
     fetchStatus();
-  }, []);
+  }, [user]);
 
   // Close panel when clicking outside
   useEffect(() => {

@@ -39,10 +39,7 @@ const Projects = () => {
   // ✅ FETCH PROJECTS
   useEffect(() => {
     const fetchProjects = async () => {
-      if (!user?._id) {
-        setLoading(false);
-        return;
-      }
+      if (!user?._id) return;
 
       try {
         const response = await getProjectsByUserId(user._id);
@@ -60,7 +57,7 @@ const Projects = () => {
     };
 
     fetchProjects();
-  }, [user]);
+  }, [user?._id]);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

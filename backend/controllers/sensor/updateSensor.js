@@ -1,14 +1,14 @@
 const Joi = require("joi");
-const SensorModel = require("../../models/SensorModels");
+const SensorModel = require("../../models/sensorModel");
 
 const updateSensor = async (req, res) => {
- const schema = Joi.object({
-   sensorName: Joi.string().optional(),
-   unit: Joi.string().optional(),
-   sensorMode: Joi.string().valid("input", "output").optional(),
-   minThreshold: Joi.number().optional(),
-   maxThreshold: Joi.number().optional(),
- });
+  const schema = Joi.object({
+    sensorName: Joi.string().optional(),
+    unit: Joi.string().optional(),
+    sensorMode: Joi.string().valid("input", "output").optional(),
+    minThreshold: Joi.number().optional(),
+    maxThreshold: Joi.number().optional(),
+  });
 
   const { error, value } = schema.validate(req.body);
 

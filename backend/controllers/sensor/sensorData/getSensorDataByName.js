@@ -29,10 +29,10 @@ const getSensorDataByName = async (req, res) => {
     }
 
     // 2️⃣ Find sensor inside that project
-    const sensor = await SensorModel.findOne({
-      sensorName: value.sensorName,
-      project: project._id,
-    });
+    const sensor = await SensorModel.findSensorByNameAndProjectId(
+      value.sensorName,
+      project._id,
+    );
 
     if (!sensor) {
       return res.status(404).json({

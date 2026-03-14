@@ -1,32 +1,74 @@
-const mongoose = require("mongoose");
+const Sensor = require("./sensorSchema");
+const SensorData = require("./sensorDataModel");
 
-const sensorSchema = new mongoose.Schema({
-  sensorName: { type: String, required: true },
+class SensorModel {
+  static async createSensor(sensorData) {
+    return await Sensor.create(sensorData);
+  }
 
-  sensorMode: {
-    type: String,
-    enum: ["input", "output"],
-    required: true,
-  },
+  static async findSensorById(id) {
+    return await Sensor.findById(id);
+  }
 
-  unit: String,
-  minThreshold: Number,
-  maxThreshold: Number,
+  static async findSensorByNameAndProjectId(sensorName, projectId) {
+    return await Sensor.findOne({
+      sensorName: { $regex: `^${sensorName}$`, $options: "i" },
+      project: projectId,
+    });
+  }
 
-  project: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Project",
-    required: true,
-  },
+  static async findSensorByName(sensorName) {
+    return await Sensor.findOne({ sensorName });
+  }
 
-  owner: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-});
+  static async findByProjectId(projectId) {
+    return await Sensor.find({ project: projectId });
+  }
 
+  static async getAllSensors() {
+    return await Sensor.find();
+  }
 
-const Sensor = mongoose.model("Sensor", sensorSchema);
+  static async updateSensor(id, sensorData) {
+    return await Sensor.findByIdAndUpdate(id, sensorData, { new: true });
+  }
 
-module.exports = Sensor;
+  static async deleteSensor(id) {
+    return await Sensor.findByIdAndDelete(id);
+  }
+
+  static async deleteSensorDataBySensorId(sensorId) {
+    return await SensorData.deleteMany({ sensor: sensorId });
+  }
+
+  //SENSOR DATA METHODS
+
+  static async createSensorData(sensorData) {
+    return await SensorData.create(sensorData);
+  }
+
+  static async findSensorDataById(id) {
+    return await SensorData.findById(id);
+  }
+
+  static async findSensorDataByIds(ids) {
+    return await SensorData.find({
+      _id: { $in: ids },
+    });
+  }
+  static async findSensorDataBySensorId(sensorId) {
+    return await SensorData.find({ sensor: sensorId }).sort({ createdAt: -1 }); // 🔥 latest first
+  }
+
+  static async deleteSensorData(id) {
+    return await SensorData.findByIdAndDelete(id);
+  }
+
+  static async deleteMultipleSensorData(ids) {
+    return await SensorData.deleteMany({
+      _id: { $in: ids },
+    });
+  }
+}
+
+module.exports = SensorModel;

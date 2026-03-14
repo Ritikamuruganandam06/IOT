@@ -1,4 +1,4 @@
-const SensorModel = require("../../../models/SensorModels");
+const SensorModel = require("../../../models/sensorModel");
 const ProjectModel = require("../../../models/projectModel");
 const Joi = require("joi");
 
@@ -35,6 +35,8 @@ const getSensorData = async (req, res) => {
         message: "Sensor not found",
       });
     }
+    console.log("Sensor project:", sensor.project.toString());
+    console.log("Requested project:", value.projectId);
 
     // 3️⃣ Ensure sensor belongs to project
     if (sensor.project.toString() !== value.projectId) {
@@ -43,7 +45,6 @@ const getSensorData = async (req, res) => {
         message: "Sensor does not belong to this project",
       });
     }
-
     // 4️⃣ Get sensor data
     const sensorData = await SensorModel.findSensorDataBySensorId(
       value.sensorId,

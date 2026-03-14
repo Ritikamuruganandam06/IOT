@@ -29,10 +29,9 @@ const GaugeCard = ({ sensors, sensorData }) => {
             <div className="w-full flex flex-wrap justify-center gap-4 overflow-auto">
               {(sensorData || []).map((data, index) => {
                 const sensor = sensors[index];
-                const latestData =
-                  data?.length > 0 ? data[data.length - 1] : null;
-
-                // ✅ SAFE NUMERIC VALUES
+               const latestData =
+                 Array.isArray(data) && data.length ? data[0] : null;
+   
                 const min = Number(sensor?.minThreshold ?? 0);
                 const max = Number(sensor?.maxThreshold ?? 100);
 

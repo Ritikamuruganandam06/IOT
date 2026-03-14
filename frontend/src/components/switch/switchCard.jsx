@@ -23,10 +23,12 @@ const SwitchCard = ({ sensor, sensorData, onSwitchChange }) => {
 
   const handleSwitchChange = async () => {
     const newValue = isChecked ? 0 : 1;
-
-    await onSwitchChange(sensor.id, newValue);
-
-    setIsChecked(!isChecked);
+try {
+  await onSwitchChange(sensor.id, newValue);
+  setIsChecked(!isChecked);
+} catch (error) {
+  console.error("Failed to change switch");
+}
   };
 
   return (

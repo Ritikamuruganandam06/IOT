@@ -49,27 +49,27 @@ const Profile = () => {
   const [editUser, setEditUser] = useState({});
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (user && user.email) {
-      const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-        user.email,
-      )}&background=random&color=ffffff&bold=true`;
-      setProfileImageUrl(avatarUrl);
-      setEditUser(user);
-    }
+ useEffect(() => {
+  if (!user?._id) return;
 
-    const fetchProject = async () => {
-      try {
-        if (user && user._id) {
-          const projectsData = await getProjectsByUserId(user.id);
-          setProjects(projectsData);
-        }
-      } catch (error) {
-        console.error("Failed to fetch projects and sensors:", error);
-      }
-    };
-    fetchProject();
-  }, [user]);
+  const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    user.email,
+  )}&background=random&color=ffffff&bold=true`;
+
+  setProfileImageUrl(avatarUrl);
+  setEditUser(user);
+
+  const fetchProject = async () => {
+    try {
+      const projectsData = await getProjectsByUserId(user._id);
+      setProjects(projectsData || []);
+    } catch (error) {
+      console.error("Failed to fetch projects:", error);
+    }
+  };
+
+  fetchProject();
+}, [user?._id]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -282,7 +282,7 @@ const Profile = () => {
           <CardContent className="py-6 px-2 sm:px-4 md:px-8 bg-accent rounded-lg">
             {projects.map((project) => (
               <motion.div
-                key={project.id}
+                key={project._id}
                 variants={itemVariants}
                 initial="hidden"
                 animate="visible"
@@ -293,7 +293,7 @@ const Profile = () => {
                     Project Name:
                   </div>
                   <div className="text-lg font-bold text-primary">
-                    {project.name}
+                    {project.projectName}
                   </div>
 
                   <div className="text-primary font-medium">Description:</div>
@@ -305,7 +305,7 @@ const Profile = () => {
                     MicroController:
                   </div>
                   <div className="text-primary font-medium">
-                    {project.microController}
+                    {project.MicroController}
                   </div>
                 </div>
               </motion.div>

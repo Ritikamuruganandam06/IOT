@@ -1,5 +1,5 @@
 const ProjectModel = require("../../models/projectModel");
-const SensorModel = require("../../models/SensorModels");
+const SensorModel = require("../../models/sensorModel");
 
 const getSensorByProjectId = async (req, res) => {
   const { projectId } = req.params;

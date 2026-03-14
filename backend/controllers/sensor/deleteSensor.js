@@ -1,4 +1,4 @@
-const SensorModel = require("../../models/SensorModels");
+const SensorModel = require("../../models/sensorModel");
 
 const deleteSensor = async (req, res) => {
   const { sensorId } = req.params;

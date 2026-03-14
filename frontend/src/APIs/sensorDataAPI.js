@@ -30,9 +30,9 @@ export const receiveSensorData = async (projectId, sensorId) => {
   try {
     const token = getToken();
 
-    const response = await api.post(
+    const response = await api.get(
       `/projects/${projectId}/sensor/${sensorId}/getData`,
-      {},
+
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -40,7 +40,7 @@ export const receiveSensorData = async (projectId, sensorId) => {
       },
     );
 
-    const formatted = response.data.data.map((item) => ({
+    const formatted = (response.data?.data || []).map((item) => ({
       id: item._id,
       value: item.value,
       sensorId: item.sensor,

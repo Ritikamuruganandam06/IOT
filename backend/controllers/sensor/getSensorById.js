@@ -1,12 +1,17 @@
-const SensorModel = require("../../models/SensorModels");
+const SensorModel = require("../../models/sensorModel");
 
 const getSensorById = async (req, res) => {
-console.log("Getting sensor with ID:", req.params.sensorId, "for project:", req.params.projectId)
+  console.log(
+    "Getting sensor with ID:",
+    req.params.sensorId,
+    "for project:",
+    req.params.projectId,
+  );
   const { sensorId, projectId } = req.params;
 
   try {
     const sensor = await SensorModel.findSensorById(sensorId);
-    
+
     if (!sensor || sensor.project.toString() !== projectId) {
       return res.status(404).json({
         status: "error",

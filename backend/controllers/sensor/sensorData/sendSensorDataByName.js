@@ -56,10 +56,10 @@ const sendSensorDataByName = async (req, res) => {
   }
 
   try {
-    // 1️⃣ Find project
-    const project = await ProjectModel.findOne({
-      projectName: pVal.projectName,
-    });
+    console.log("Received body:", req.body);
+
+    // 🔎 Find project
+    const project = await ProjectModel.findProjectByName(pVal.projectName);
 
     if (!project) {
       return res.status(404).json({
@@ -68,11 +68,13 @@ const sendSensorDataByName = async (req, res) => {
       });
     }
 
-    // 2️⃣ Find sensor inside that project
-    const sensor = await SensorModel.findOne({
-      sensorName: pVal.sensorName,
-      project: project._id,
-    });
+    console.log("Project found:", project._id.toString());
+
+    // 🔎 Find sensor inside project
+    const sensor = await SensorModel.findSensorByNameAndProjectId(
+      pVal.sensorName,
+      project._id,
+    );
 
     if (!sensor) {
       return res.status(404).json({
@@ -81,35 +83,43 @@ const sendSensorDataByName = async (req, res) => {
       });
     }
 
-    // 3️⃣ Validate INPUT sensor
-    if (sensor.type === "INPUT" && ![0, 1].includes(bVal.value)) {
+    console.log("Sensor found:", sensor._id.toString());
+
+    // ⚡ Validate INPUT sensor
+    if (sensor.sensorMode === "input" && ![0, 1].includes(bVal.value)) {
       return res.status(400).json({
         status: "error",
         message: "Value must be 0 or 1 for INPUT sensor",
       });
     }
 
-    // 4️⃣ Store sensor data
+    // 📦 Store sensor data
     const sensorData = await SensorModel.createSensorData({
       sensor: sensor._id,
       value: bVal.value,
     });
 
-    // 5️⃣ Emit real-time update
+    console.log("Sensor data stored:", sensorData._id.toString());
+
+    // 🚀 Emit realtime update to dashboard
     if (req.io) {
-      req.io.to(project._id.toString()).emit("sensorDataUpdate", {
-  id: sensorData._id, 
-  projectId: pVal.projectId,
-  sensorId: sensor._id,
-  sensorName: sensor.sensorName,
-  value: sensorData.value,
-  timestamp: sensorData.createdAt,
-});
+      const room = project._id.toString();
+
+      console.log("Emitting sensorDataUpdate to room:", room);
+
+      req.io.to(room).emit("sensorDataUpdate", {
+        id: sensorData._id.toString(),
+        projectId: project._id.toString(),
+        sensorId: sensor._id.toString(),
+        sensorName: sensor.sensorName,
+        value: sensorData.value,
+        timestamp: sensorData.createdAt,
+      });
     }
 
-    // 6️⃣ Threshold check (only for OUTPUT sensors)
+    // ⚠ Threshold check (only for OUTPUT sensors)
     if (
-      sensor.type !== "INPUT" &&
+      sensor.sensorMode !== "input" &&
       sensor.minThreshold !== undefined &&
       sensor.maxThreshold !== undefined &&
       (sensorData.value < sensor.minThreshold ||
@@ -121,6 +131,7 @@ const sendSensorDataByName = async (req, res) => {
         const now = Date.now();
         const last = lastEmailSentTime[sensor._id] || 0;
 
+        // ⏱ limit email frequency (15 minutes)
         if (now - last > 15 * 60 * 1000) {
           const emailBody = formatEmailContent(
             user.username,
@@ -131,6 +142,7 @@ const sendSensorDataByName = async (req, res) => {
           );
 
           await sendEmail(user.email, "🚨 Sensor Alert", emailBody);
+
           lastEmailSentTime[sensor._id] = now;
         }
       }
@@ -142,6 +154,8 @@ const sendSensorDataByName = async (req, res) => {
       data: sensorData,
     });
   } catch (error) {
+    console.error("Error storing sensor data:", error);
+
     return res.status(500).json({
       status: "error",
       message: error.message,

@@ -37,11 +37,12 @@ const login = async (userData) => {
 
     const response = await api.post("/api/users/login", userData);
 
-    const token = response.data.token;
+    const { token, user } = response.data;
 
     saveToken(token);
+    localStorage.setItem("userId", user._id);
 
-    await fetchUserData(); // 🔥 THIS IS THE FIX
+    setUser(user);
   } catch (error) {
     setError(error?.response?.data?.message || "Login failed");
   } finally {

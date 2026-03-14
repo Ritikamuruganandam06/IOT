@@ -1,6 +1,6 @@
-const projectModel = require('../../../models/projectModel');
-const SensorModel = require('../../../models/SensorModels');
-const joi = require('joi');
+const projectModel = require("../../../models/projectModel");
+const SensorModel = require("../../../models/sensorModel");
+const joi = require("joi");
 
 const deleteSensorData = async (req, res) => {
   const paramsSchema = joi.object({

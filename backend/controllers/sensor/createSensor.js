@@ -1,5 +1,5 @@
 const Joi = require("joi");
-const SensorModel = require("../../models/SensorModels");
+const SensorModel = require("../../models/sensorModel");
 const ProjectModel = require("../../models/projectModel");
 
 const createSensor = async (req, res) => {
@@ -22,7 +22,12 @@ const createSensor = async (req, res) => {
       otherwise: Joi.forbidden(),
     }),
   });
-console.log("Received create sensor request with body:", req.body, "and params:", req.params);
+  console.log(
+    "Received create sensor request with body:",
+    req.body,
+    "and params:",
+    req.params,
+  );
   const { error, value } = schema.validate(req.body);
 
   if (error) {
@@ -37,7 +42,7 @@ console.log("Received create sensor request with body:", req.body, "and params:"
   }
 
   const { projectId } = req.params;
-    try {
+  try {
     // Check project exists
     const projectExists = await ProjectModel.findProjectById(projectId);
 
@@ -61,9 +66,15 @@ console.log("Received create sensor request with body:", req.body, "and params:"
       });
     }
 
-   const minThreshold = value.sensorMode === "input" ? 0 : value.minThreshold;
-   const maxThreshold = value.sensorMode === "input" ? 1 : value.maxThreshold;
-    console.log("Final sensor data to create:", minThreshold, maxThreshold, value,req.user.id);
+    const minThreshold = value.sensorMode === "input" ? 0 : value.minThreshold;
+    const maxThreshold = value.sensorMode === "input" ? 1 : value.maxThreshold;
+    console.log(
+      "Final sensor data to create:",
+      minThreshold,
+      maxThreshold,
+      value,
+      req.user.id,
+    );
     const sensor = await SensorModel.createSensor({
       ...value,
       minThreshold,

@@ -115,8 +115,8 @@ const LiveTracking = () => {
         ).map((sensor) => ({
           ...sensor,
           id: sensor._id,
-          name: sensor.sensorName, // 🔥 FIX
-          type: sensor.sensorMode?.toUpperCase(), // 🔥 FIX
+          name: sensor.sensorName,
+          type: sensor.sensorMode?.toUpperCase(),
         }));
         setSensors(normalizedSensors);
       } catch (error) {
@@ -141,7 +141,7 @@ const LiveTracking = () => {
         }
 
         const promises = sensors.map((sensor) =>
-          receiveSensorData(selectedProject._id, sensor._id, user._id),
+          receiveSensorData(selectedProject._id, sensor.id),
         );
 
         const responses = await Promise.all(promises);
@@ -152,7 +152,7 @@ const LiveTracking = () => {
     };
 
     fetchSensorData();
-  }, [sensors]);
+  }, [sensors, selectedProject?._id, user?._id]);
 
   // ==============================
   // Socket Updates
@@ -160,35 +160,49 @@ const LiveTracking = () => {
   useEffect(() => {
     if (!selectedProject?._id) return;
 
+    console.log("Joining project room:", selectedProject._id);
+
     socket.emit("joinProject", selectedProject._id);
 
-    socket.on("sensorDataUpdate", (data) => {
-      setSensorData((prev) =>
-        prev.map((arr) => {
-          if (arr.length > 0 && arr[0].sensorId === data.sensorId) {
-            return [...arr, data];
-          }
-          return arr;
-        }),
-      );
-    });
+    const handleSensorUpdate = (data) => {
+      console.log("Realtime data received:", data);
 
-    socket.on("sensorDataDeleted", (data) => {
-      setSensorData((prev) =>
-        prev.map((arr) => {
-          if (arr.length > 0 && arr[0].sensorId === data.sensorId) {
-            return arr.filter((item) => item._id !== data.dataId);
-          }
-          return arr;
-        }),
-      );
-    });
+      const formatted = {
+        id: data.id,
+        value: data.value,
+        sensorId: data.sensorId,
+        timestamp: data.timestamp,
+      };
+
+      setSensorData((prev) => {
+  const updated = [...prev];
+
+  const sensorIndex = sensors.findIndex(
+    (s) => s.id === data.sensorId
+  );
+
+  if (sensorIndex !== -1) {
+    updated[sensorIndex] = [
+      ...(updated[sensorIndex] || []),
+      {
+        id: data.id,
+        value: data.value,
+        sensorId: data.sensorId,
+        timestamp: data.timestamp,
+      },
+    ];
+  }
+
+  return updated;
+});
+    }
+
+    socket.on("sensorDataUpdate", handleSensorUpdate);
 
     return () => {
-      socket.off("sensorDataUpdate");
-      socket.off("sensorDataDeleted");
+      socket.off("sensorDataUpdate", handleSensorUpdate);
     };
-  }, [selectedProject?._id]);
+  }, [selectedProject?._id, sensors]);
   if (loading) {
     return (
       <div className="h-screen flex justify-center items-center">
@@ -197,16 +211,19 @@ const LiveTracking = () => {
     );
   }
   // Separate sensors by type
-  const outputSensors = sensors.filter((sensor) => sensor.type === "OUTPUT");
+  const outputSensors = sensors.filter(
+    (sensor) => sensor.type?.toUpperCase() === "OUTPUT",
+  );
 
-  const inputSensors = sensors.filter((sensor) => sensor.type === "INPUT");
+ const inputSensors = sensors.filter(
+   (sensor) => sensor.type?.toUpperCase() === "INPUT",
+ );
 
   // Match sensorData correctly by index
-  const outputSensorData = sensors
-    .map((sensor, index) =>
-      sensor.type === "OUTPUT" ? sensorData[index] : null,
-    )
-    .filter(Boolean);
+  const outputSensorData = outputSensors.map((sensor) => {
+    const index = sensors.findIndex((s) => s.id === sensor.id);
+    return sensorData[index] || [];
+  });
 
   const inputSensorData = sensors
     .map((sensor, index) =>
@@ -299,6 +316,23 @@ const LiveTracking = () => {
                     await sendSensorData(selectedProject._id, sensorId, {
                       value,
                     });
+
+                    const formatted = {
+                      id: Date.now(),
+                      value,
+                      sensorId,
+                      timestamp: new Date().toISOString(),
+                    };
+
+                    setSensorData((prev) =>
+                      prev.map((arr, index) => {
+                        const sensor = sensors[index];
+                        if (sensor?.id === sensorId) {
+                          return [...arr, formatted];
+                        }
+                        return arr;
+                      }),
+                    );
                   }}
                 />
               ))}

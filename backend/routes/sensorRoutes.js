@@ -14,6 +14,7 @@ const getSensorDataByName = require("../controllers/sensor/sensorData/getSensorD
 const sendSensorDataByName = require("../controllers/sensor/sensorData/sendSensorDataByName");
 const deleteMultipleSensorData = require("../controllers/sensor/sensorData/deleteMultipleSensorData");
 const verifyDevice = require("../middleware/verifyDevice");
+const SensorModel = require("../models/sensorModel");
 const router = (io) => {
   const router = express.Router();
   router.post("/projects/:projectId/sensors", authenticateToken, createSensor);
@@ -56,12 +57,47 @@ const router = (io) => {
     },
   );
   // Get sensor data (WebSocket enabled)
-  router.post(
+  router.get(
     "/projects/:projectId/sensor/:sensorId/getData",
     authenticateToken,
     (req, res) => {
       req.io = io;
       getSensorData(req, res);
+    },
+  );
+
+  router.post(
+    "/device/projects/:projectId/sensor/:sensorId/getLatestData",
+    verifyDevice,
+    async (req, res) => {
+      try {
+        const { sensorId } = req.params;
+
+        const sensorData = await SensorModel.findSensorDataBySensorId(sensorId);
+
+        if (!sensorData || sensorData.length === 0) {
+          return res.status(200).json({
+            status: "success",
+            data: null,
+          });
+        }
+
+        // Because your model already sorts newest first
+        const latest = sensorData[0];
+
+        res.status(200).json({
+          status: "success",
+          data: {
+            value: latest.value,
+            createdAt: latest.createdAt,
+          },
+        });
+      } catch (error) {
+        res.status(500).json({
+          status: "error",
+          message: error.message,
+        });
+      }
     },
   );
   // Delete sensor data
@@ -86,7 +122,7 @@ const router = (io) => {
   //get sensor data by sensor name & project Name (WebSocket enabled)
   router.post(
     "/projects/:projectName/sensor/:sensorName/getValue",
-    authenticateToken,
+    verifyDevice,
     (req, res) => {
       req.io = io;
       getSensorDataByName(req, res);
@@ -96,7 +132,7 @@ const router = (io) => {
   // Send sensor data by sensor name & project name (WebSocket enabled)
   router.post(
     "/projects/:projectName/sensor/:sensorName/sendValue",
-    authenticateToken,
+    verifyDevice,
     (req, res) => {
       req.io = io;
       sendSensorDataByName(req, res);
