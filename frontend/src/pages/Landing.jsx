@@ -378,9 +378,9 @@ const Landing = () => {
           className="absolute top-0 inset-x-0 z-30 flex items-center justify-between px-8 py-5"
         >
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-teal-600 flex items-center justify-center">
+            {/* <div className="w-7 h-7 rounded-lg bg-teal-600 flex items-center justify-center">
               <Activity className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
-            </div>
+            </div> */}
             <span
               className="text-sm font-semibold text-slate-200 tracking-tight"
               style={{ fontFamily: "'Syne', sans-serif" }}
