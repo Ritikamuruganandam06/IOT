@@ -36,7 +36,10 @@ const loginUser = async (req, res) => {
       });
     }
     // Generate JWT
-    const token = generateToken({ id: user._id });
+    const token = generateToken({
+      id: user._id,
+      role: user.role,
+    });
     console.log("Generated Token:", token);
     return res.status(200).json({
       status: "success",

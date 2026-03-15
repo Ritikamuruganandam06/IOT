@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { getAllProjects } from "@/APIs/projectAPI";
-import { getSensorByProjectId } from "@/APIs/sensorAPI";
+import { getAdminSensorsByProject } from "@/APIs/sensorAPI";
 import {
   deleteSensorData,
   receiveSensorData,
@@ -17,21 +17,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
 import {
   Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card1";
+
 import { Button } from "@/components/ui/button1";
+
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
-  DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog1";
@@ -40,22 +39,24 @@ import Loading from "@/components/loading";
 import ManageSensors from "@/components/manageSensors/ManageSensors";
 import GaugeCard from "@/components/gauge/gaugeCard";
 import SwitchCard from "@/components/switch/switchCard";
-import { BarChartCard } from "@/components/chart/BarChartCard";
-import { LineChartCard } from "@/components/chart/LineChartCard";
 import TableCard from "@/components/table/TableCard";
+
 import { toast } from "sonner";
 
 const AllTracking = () => {
   const { user } = useAuth();
   const { projectId } = useParams();
 
-  const [showForm, setShowForm] = useState(false);
   const [projects, setProjects] = useState([]);
   const [sensors, setSensors] = useState([]);
   const [sensorData, setSensorData] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
+  const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // ===============================
+  // FETCH PROJECTS / SENSORS / DATA
+  // ===============================
   useEffect(() => {
     const getProjects = async () => {
       try {
@@ -71,7 +72,7 @@ const AllTracking = () => {
           setSelectedProject(project);
         }
       } catch (error) {
-        console.error("Failed to fetch projects:", error);
+        console.error(error);
         toast.error("Failed to fetch projects");
       } finally {
         setLoading(false);
@@ -80,76 +81,88 @@ const AllTracking = () => {
 
     const getSensors = async () => {
       try {
-        const response = await getSensorByProjectId(selectedProject?._id);
-        setSensors(response.data || []);
+        const response = await getAdminSensorsByProject(selectedProject?._id);
+
+        const formattedSensors = (response.data || []).map((sensor) => ({
+          ...sensor,
+          id: sensor._id,
+          name: sensor.sensorName,
+          type: sensor.sensorMode?.toUpperCase(),
+        }));
+
+        setSensors(formattedSensors);
         setSensorData([]);
       } catch (error) {
-        console.error("Failed to fetch sensors:", error);
+        console.error(error);
         toast.error("Failed to fetch sensors");
       }
     };
 
     const getSensorData = async () => {
       setLoading(true);
+
       try {
-        const sensorDataPromises = sensors.map((sensor) =>
-          receiveSensorData(selectedProject?._id, sensor._id),
+        const promises = sensors.map((sensor) =>
+          receiveSensorData(selectedProject?._id, sensor.id),
         );
 
-        const sensorDataResponses = await Promise.all(sensorDataPromises);
+        const responses = await Promise.all(promises);
 
-        setSensorData(sensorDataResponses.map((response) => response?.data));
+        setSensorData(responses.map((r) => r?.data || []));
       } catch (error) {
-        console.error("Failed to fetch sensors:", error);
+        console.error(error);
         toast.error("Failed to get sensor data");
       } finally {
         setLoading(false);
       }
     };
 
-    user?._id && !selectedProject && getProjects();
-    selectedProject?._id && getSensors();
-    sensors.length > 0 && getSensorData();
+    if (user?._id && !selectedProject) getProjects();
+    if (selectedProject?._id) getSensors();
+    if (sensors.length > 0) getSensorData();
   }, [user?._id, selectedProject?._id, sensors.length]);
+
+  // ===============================
+  // SOCKET LISTENERS
+  // ===============================
 
   useEffect(() => {
     socket.on("sensorData", (data) => {
-      setSensorData((prevData) => {
-        const updatedData = prevData.map((sensorArray) => {
+      setSensorData((prev) => {
+        const updated = prev.map((sensorArray) => {
           if (
             sensorArray.length > 0 &&
             sensorArray[0].sensorId === data.sensorId
           ) {
             return [...sensorArray, data];
           }
+
           if (sensorArray.length === 0) {
             return [data];
           }
+
           return sensorArray;
         });
-        return updatedData;
+
+        return updated;
       });
     });
 
     socket.on("deleteSensorData", (data) => {
-      setSensorData((prevData) => {
-        const updatedData = prevData.map((sensorArray) => {
-          if (
-            sensorArray.length > 0 &&
-            sensorArray[0].sensorId === data.sensorId
-          ) {
-            return sensorArray.filter((sensor) => sensor.id !== data.id);
-          }
-          return sensorArray;
-        });
-        return updatedData;
-      });
+      setSensorData((prev) =>
+        prev.map((arr) => arr.filter((item) => item.id !== data.id)),
+      );
     });
 
     return () => {
       socket.off("sensorData");
+      socket.off("deleteSensorData");
     };
   }, []);
+
+  // ===============================
+  // SWITCH CHANGE
+  // ===============================
 
   const handleSwitchChange = async (sensorId, newValue) => {
     try {
@@ -159,20 +172,17 @@ const AllTracking = () => {
       });
 
       if (response?.status === "success") {
-        setSensorData((prevData) =>
-          prevData.map((sensor) =>
-            sensor.sensorId === sensorId
-              ? { ...sensor, value: newValue }
-              : sensor,
-          ),
-        );
         toast.success(response?.message);
       }
     } catch (error) {
-      console.error("Failed to send sensor data:", error);
+      console.error(error);
       toast.error("Failed to send sensor data");
     }
   };
+
+  // ===============================
+  // DELETE SENSOR DATA
+  // ===============================
 
   const handleDelete = async (item) => {
     try {
@@ -184,53 +194,54 @@ const AllTracking = () => {
       );
 
       if (response?.status === "success") {
-        toast.success("Data deleted successfully");
-      } else {
-        toast.error("Failed to delete data");
+        toast.success("Deleted successfully");
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete data");
     }
   };
 
-  const handleDialogClose = () => setShowForm(false);
-  const handleDialogOpen = () => setShowForm(true);
+  // ===============================
+  // MANAGE SENSOR MODAL
+  // ===============================
 
-  const changeSensors = (sensors) => {
-    setSensors(sensors);
+  const changeSensors = (newSensors) => {
+    setSensors(newSensors);
   };
 
   if (loading) {
     return (
-      <div className="relative h-screen">
+      <div className="h-screen flex justify-center items-center">
         <Loading />
       </div>
     );
   }
 
+  // ===============================
+  // UI
+  // ===============================
+
   return (
     <div className="p-3 w-full">
-      <div className="flex my-3 sm:my-5 justify-between items-center md:px-12 lg:px-20 2xl:px-32">
-        <h1 className="text-lg sm:text-xl lg:text-2xl text-foreground font-bold items-center">
-          Track Individual Project
-        </h1>
+      {/* HEADER */}
+
+      <div className="flex justify-between items-center my-5 md:px-12 lg:px-20">
+        <h1 className="text-2xl font-bold">Track Individual Project</h1>
 
         <Select
           value={selectedProject}
           onValueChange={(value) => setSelectedProject(value)}
         >
-          <SelectTrigger className="w-[150px] sm:w-[180px] bg-slate-50">
+          <SelectTrigger className="w-[180px] bg-slate-50">
             <SelectValue
               placeholder={
-                selectedProject
-                  ? selectedProject.projectName
-                  : "Select a Project"
+                selectedProject ? selectedProject.projectName : "Select Project"
               }
             />
           </SelectTrigger>
 
           <SelectContent>
-            {projects?.map((project) => (
+            {projects.map((project) => (
               <SelectItem key={project._id} value={project}>
                 {project.projectName}
               </SelectItem>
@@ -239,54 +250,40 @@ const AllTracking = () => {
         </Select>
       </div>
 
-      <Card className="h-auto bg-quaternary rounded-xl md:rounded-2xl shadow-xl mx-2 sm:mx-3 md:mx-15 lg:mx-32 mb-6">
-        <CardHeader className="flex items-center justify-between p-4">
-          <div className="flex items-center lg:space-x-4">
-            <img src="/project.png" alt="project" className="w-24 h-24 mr-4" />
+      {/* PROJECT INFO CARD */}
 
-            <div className="flex space-x-5 lg:space-x-12">
-              <div>
-                <CardTitle className="text-2xl font-bold">
-                  {selectedProject?.projectName}
-                </CardTitle>
+      <Card className="bg-quaternary rounded-2xl shadow-xl mx-4 mb-6">
+        <CardHeader className="flex items-center justify-between p-6">
+          <div className="flex items-center gap-6">
+            <img src="/project.png" className="w-20" />
 
-                <CardDescription className="text-lg">
-                  {selectedProject?.description}
-                </CardDescription>
-              </div>
+            <div>
+              <CardTitle className="text-2xl font-bold">
+                {selectedProject?.projectName}
+              </CardTitle>
 
-              <div className="hidden md:flex md:flex-col">
-                <CardTitle className="text-2xl font-bold">
-                  Microcontroller
-                </CardTitle>
+              <CardDescription>{selectedProject?.description}</CardDescription>
 
-                <CardDescription className="text-lg pr-2 font-semibold">
-                  {selectedProject?.MicroController}
-                </CardDescription>
-              </div>
+              <CardDescription className="font-semibold mt-2">
+                Microcontroller: {selectedProject?.MicroController}
+              </CardDescription>
             </div>
           </div>
 
-          <Dialog
-            open={showForm}
-            onOpenChange={(open) =>
-              open ? handleDialogOpen() : handleDialogClose()
-            }
-          >
+          {/* MANAGE SENSOR */}
+
+          <Dialog open={showForm} onOpenChange={(o) => setShowForm(o)}>
             <DialogTrigger asChild>
-              <Button className="bg-foreground text-slate-100 hover:bg-primary hover:text-slate-200 font-semibold ">
+              <Button className="bg-foreground text-white">
                 Manage Sensors
               </Button>
             </DialogTrigger>
 
-            <DialogContent className="w-full flex flex-col justify-center items-center mt-4 bg-quaternary rounded-xl shadow-xl">
-              <DialogTitle className="-mb-2">
-                Control your Sensors Here!
-              </DialogTitle>
+            <DialogContent className="bg-quaternary rounded-xl">
+              <DialogTitle>Manage Sensors</DialogTitle>
 
-              <DialogDescription className="-mr-2">
-                Manage your sensors here. You can add, edit, or delete sensors
-                as needed.
+              <DialogDescription>
+                Add / Update / Delete Sensors
               </DialogDescription>
 
               <ManageSensors
@@ -299,6 +296,36 @@ const AllTracking = () => {
           </Dialog>
         </CardHeader>
       </Card>
+
+      {/* OUTPUT SENSORS */}
+
+      <GaugeCard
+        sensors={sensors.filter((sensor) => sensor.type === "OUTPUT")}
+        sensorData={sensorData}
+      />
+
+      {/* INPUT SENSORS */}
+
+      <div className="flex flex-wrap justify-center gap-4 lg:px-16">
+        {sensors
+          ?.filter((sensor) => sensor.type === "INPUT")
+          .map((sensor, index) => (
+            <SwitchCard
+              key={sensor.id}
+              sensor={sensor}
+              sensorData={sensorData[index] || []}
+              onSwitchChange={handleSwitchChange}
+            />
+          ))}
+      </div>
+
+      {/* TABLE */}
+
+      <TableCard
+        sensors={sensors}
+        sensorData={sensorData}
+        handleDelete={handleDelete}
+      />
     </div>
   );
 };

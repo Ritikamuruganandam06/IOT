@@ -46,7 +46,28 @@ const router = (io) => {
     authenticateToken,
     getAllSensor,
   );
+  router.get(
+    "/admin/projects/:projectId/sensors",
+    authenticateToken,
+    authorizeAdmin,
+    async (req, res) => {
+      try {
+        const { projectId } = req.params;
 
+        const sensors = await SensorModel.findByProjectId(projectId);
+
+        return res.status(200).json({
+          status: "success",
+          data: sensors,
+        });
+      } catch (error) {
+        return res.status(500).json({
+          status: "error",
+          message: error.message,
+        });
+      }
+    },
+  );
   // Send sensor data (WebSocket enabled)
   router.post(
     "/projects/:projectId/sensor/:sensorId/sendData",

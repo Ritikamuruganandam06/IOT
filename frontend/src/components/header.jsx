@@ -1,114 +1,93 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-
-import { useAuth } from '@/context/AuthContext';
-import { motion, AnimatePresence } from 'framer-motion';
-import Badge from './ui/badge';
-import { Button } from './ui/button1';
-import { getStatus } from '@/utils/status';
-
-import { FaRegBell, FaRegUser } from 'react-icons/fa';
-import { RiAdminFill } from "react-icons/ri";
+import React, { useEffect, useRef, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
+import { getStatus } from "@/utils/status";
+import { Bell } from "lucide-react";
 
 const Header = () => {
   const { user } = useAuth();
-  const [status, setStatus] = useState('Disconnected');
-  const [showNotifications, setShowNotifications] = useState(false);
+  const navigate = useNavigate();
+  const [status, setStatus] = useState("Disconnected");
+  const [showNotif, setShowNotif] = useState(false);
   const notifRef = useRef(null);
-  const Navigate = useNavigate();
+  const isAdmin = user?.role?.toLowerCase() === "admin";
 
   useEffect(() => {
-    const fetchStatus = async () => {
-      if (user) {
-        const currentStatus = await getStatus();
-        setStatus(currentStatus);
-      }
-    };
-
-    fetchStatus();
+    if (user) getStatus().then(setStatus);
   }, [user]);
 
-  // Close panel when clicking outside
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (notifRef.current && !notifRef.current.contains(e.target)) {
-        setShowNotifications(false);
-      }
+    const handler = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target))
+        setShowNotif(false);
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  return (
-    <motion.header layout
-      className="fixed top-0 left-0 sm:left-36 lg:left-64 md:left-48 right-0 z-[40] bg-foreground text-secondary flex justify-between items-center py-4 px-6 shadow-lg border-secondary/30"
-      initial={{ opacity: 0, y: -50 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-    >
-      <div className="flex items-center space-x-2 sm:space-x-4">
-        {user?.role === 'ADMIN' ? (
-          <motion.div
-            className="hidden md:block text-3xl cursor-pointer transition-transform"
-            whileHover={{ scale: 1.1 }}
-          >
-            <RiAdminFill />
-          </motion.div>
-        ) : (
-          <motion.div
-            className="hidden md:block text-3xl cursor-pointer transition-transform hover:scale-110"
-            whileHover={{ scale: 1.1 }}
-          >
-            <FaRegUser />
-          </motion.div>
-        )}
-        <p className="pl-2 sm:pl-0 text-base sm:text-lg font-medium">{user?.username || "Guest"}</p>
-      </div>
-      
-      <div className="flex items-center space-x-2 sm:space-x-4">
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-        >
-          <Button 
-            variant="secondary" className="rounded-lg px-1 sm:px-4 shadow-md transition-all hover:shadow-lg text-bold text-foreground hover:bg-tertiary hover:text-secondary"
-            onClick={() => user.role === 'ADMIN' ? Navigate('/manageProject') : Navigate('/projects')}
-          >
-          {user?.role === 'ADMIN' ? 'Manage Projects' : 'Quick Start'}
-          </Button>
-        </motion.div>
-        <Badge status={status} className="text-sm font-semibold" />
-        <div className="relative" ref={notifRef}>
-          <motion.div
-            className="text-xl sm:text-3xl cursor-pointer transition-transform hover:scale-110"
-            whileHover={{ scale: 1.1 }}
-            onClick={() => setShowNotifications((prev) => !prev)}
-          >
-            <FaRegBell />
-          </motion.div>
+  const statusColor =
+    status === "Connected"
+      ? "bg-teal-500"
+      : status === "Connecting"
+        ? "bg-amber-400"
+        : "bg-slate-600";
 
-          <AnimatePresence>
-            {showNotifications && (
-              <motion.div
-                initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                transition={{ duration: 0.18 }}
-                className="absolute right-0 mt-3 w-80 bg-white dark:bg-slate-900 border border-gray-200 dark:border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden"
-              >
-                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-white/10">
-                  <span className="font-semibold text-gray-800 dark:text-white text-sm">Notifications</span>
-                  <span className="text-xs text-gray-400">0 new</span>
-                </div>
-                <div className="flex flex-col items-center justify-center py-10 text-gray-400 dark:text-gray-500 gap-2">
-                  <FaRegBell className="text-3xl opacity-30" />
-                  <p className="text-sm">No notifications yet</p>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+  return (
+    <header className="fixed top-0 left-0 sm:left-56 right-0 z-40 h-14 bg-slate-950 border-b border-slate-800 flex items-center justify-between px-5">
+      {/* left */}
+      <div className="flex items-center gap-2.5">
+        <span className="text-sm font-medium text-slate-200">
+          {user?.username || "Guest"}
+        </span>
+        <span className="text-xs text-slate-600 bg-slate-800 px-2 py-0.5 rounded-full">
+          {isAdmin ? "Admin" : "User"}
+        </span>
+      </div>
+
+      {/* right */}
+      <div className="flex items-center gap-4">
+        {/* status dot */}
+        <div className="flex items-center gap-1.5">
+          <span className={`w-2 h-2 rounded-full ${statusColor}`} />
+          <span className="text-xs text-slate-500 hidden sm:inline">
+            {status}
+          </span>
+        </div>
+
+        {/* quick action */}
+        <button
+          onClick={() => navigate(isAdmin ? "/manageProject" : "/projects")}
+          className="text-xs font-medium px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors duration-150"
+        >
+          {isAdmin ? "Manage Projects" : "Quick Start"}
+        </button>
+
+        {/* bell */}
+        <div className="relative" ref={notifRef}>
+          <button
+            onClick={() => setShowNotif((p) => !p)}
+            className="text-slate-500 hover:text-slate-300 transition-colors"
+          >
+            <Bell className="w-4 h-4" strokeWidth={1.5} />
+          </button>
+
+          {showNotif && (
+            <div className="absolute right-0 mt-3 w-72 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl z-50 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+                <span className="text-sm font-medium text-slate-200">
+                  Notifications
+                </span>
+                <span className="text-xs text-slate-600">0 new</span>
+              </div>
+              <div className="flex flex-col items-center justify-center py-10 gap-2 text-slate-600">
+                <Bell className="w-6 h-6 opacity-30" strokeWidth={1} />
+                <p className="text-xs">No notifications yet</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
-    </motion.header>
+    </header>
   );
 };
 

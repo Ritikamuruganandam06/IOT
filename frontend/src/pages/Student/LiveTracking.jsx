@@ -157,52 +157,45 @@ const LiveTracking = () => {
   // ==============================
   // Socket Updates
   // ==============================
-  useEffect(() => {
-    if (!selectedProject?._id) return;
+ useEffect(() => {
+   if (!selectedProject?._id) return;
 
-    console.log("Joining project room:", selectedProject._id);
+   console.log("Joining project room:", selectedProject._id);
 
-    socket.emit("joinProject", selectedProject._id);
+   socket.emit("joinProject", selectedProject._id);
 
-    const handleSensorUpdate = (data) => {
-      console.log("Realtime data received:", data);
+   const handleSensorUpdate = (data) => {
+     console.log("Realtime data received:", data);
 
-      const formatted = {
-        id: data.id,
-        value: data.value,
-        sensorId: data.sensorId,
-        timestamp: data.timestamp,
-      };
+     setSensorData((prev) => {
+       const updated = [...prev];
 
-      setSensorData((prev) => {
-  const updated = [...prev];
+       const sensorIndex = sensors.findIndex(
+         (s) => s._id === data.sensorId, // ✅ FIX HERE
+       );
 
-  const sensorIndex = sensors.findIndex(
-    (s) => s.id === data.sensorId
-  );
+       if (sensorIndex !== -1) {
+         updated[sensorIndex] = [
+           ...(updated[sensorIndex] || []),
+           {
+             id: data.id,
+             value: data.value,
+             sensorId: data.sensorId,
+             timestamp: data.timestamp,
+           },
+         ];
+       }
 
-  if (sensorIndex !== -1) {
-    updated[sensorIndex] = [
-      ...(updated[sensorIndex] || []),
-      {
-        id: data.id,
-        value: data.value,
-        sensorId: data.sensorId,
-        timestamp: data.timestamp,
-      },
-    ];
-  }
+       return updated;
+     });
+   };
 
-  return updated;
-});
-    }
+   socket.on("sensorDataUpdate", handleSensorUpdate);
 
-    socket.on("sensorDataUpdate", handleSensorUpdate);
-
-    return () => {
-      socket.off("sensorDataUpdate", handleSensorUpdate);
-    };
-  }, [selectedProject?._id, sensors]);
+   return () => {
+     socket.off("sensorDataUpdate", handleSensorUpdate);
+   };
+ }, [selectedProject?._id, sensors]);
   if (loading) {
     return (
       <div className="h-screen flex justify-center items-center">

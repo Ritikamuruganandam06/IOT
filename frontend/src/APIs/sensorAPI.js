@@ -75,7 +75,18 @@ export const getAllSensors = async (projectId) => {
     };
   }
 };
-
+export const getAdminSensorsByProject = async (projectId) => {
+  try {
+    const response = await api.get(`/api/admin/projects/${projectId}/sensors`);
+    return response.data;
+  } catch (error) {
+    console.error("Get admin sensors error:", error);
+    return {
+      status: "error",
+      data: [],
+    };
+  }
+};
 // ==============================
 // Update Sensor
 // Backend: PATCH /projects/:projectId/sensor/update/:sensorId
